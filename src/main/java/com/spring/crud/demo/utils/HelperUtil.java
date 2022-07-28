@@ -21,18 +21,17 @@ public class HelperUtil {
 
     public static Supplier<List<Student>> studentSupplier = () ->
             Arrays.asList(
-		            Student.builder().rollNo(1).firstName("Binay").lastName("Gurung").marks(300.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(3).firstName("Sunny").lastName("Deol").marks(500.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(4).firstName("Salman").lastName("Khan").marks(600.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(5).firstName("Aamir").lastName("Khan").marks(700.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(6).firstName("Shahrukh").lastName("Khan").marks(800.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(7).firstName("Ranbir").lastName("Kapoor").marks(900.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(8).firstName("Ranveer").lastName("Singh").marks(800.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(9).firstName("Akshay").lastName("Kumar").marks(900.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
-		            Student.builder().rollNo(10).firstName("Ajay").lastName("Devgan").marks(800.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build()
+                    Student.builder().rollNo(1).firstName("Binay").lastName("Gurung").marks(300.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(3).firstName("Sunny").lastName("Deol").marks(500.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(4).firstName("Salman").lastName("Khan").marks(600.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(5).firstName("Aamir").lastName("Khan").marks(700.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(6).firstName("Shahrukh").lastName("Khan").marks(800.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(7).firstName("Ranbir").lastName("Kapoor").marks(900.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(8).firstName("Ranveer").lastName("Singh").marks(800.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(9).firstName("Akshay").lastName("Kumar").marks(900.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build(),
+                    Student.builder().rollNo(10).firstName("Ajay").lastName("Devgan").marks(800.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build()
             );
-
 
 
     public static Supplier<List<SuperHero>> superHeroesSupplier = () ->
@@ -45,74 +44,64 @@ public class HelperUtil {
             );
 
 
+    public static Supplier<List<Employee>> employeeSupplier = () -> {
 
+        Address rahulAddress = new Address();
+        rahulAddress.setId(1);
+        rahulAddress.setStreetAddress("RS road");
+        rahulAddress.setCity("Pune");
+        rahulAddress.setState("Maharashtra");
+        rahulAddress.setCountry("India");
+        rahulAddress.setPostalCode("411018");
 
-	public static Supplier<List<Employee>> employeeSupplier = () -> {
+        PhoneNumber rahulsNo = new PhoneNumber();
+        rahulsNo.setId(1);
+        rahulsNo.setType("Mobile");
+        rahulsNo.setNumber("1234567890");
 
-		Employee rahul = Employee.builder()
-				.id(1)
-				.firstName("Rahul")
-				.lastName("Ghadage")
-				.age(28)
-				.noOfChildrens(0)
-				.dateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)))
-				.spouse(true)
-				.address(Address.builder()
-						.id(1)
-						.streetAddress("RS road")
-						.city("Pune")
-						.state("Maharashtra")
-						.country("India")
-						.postalCode("411018")
-						.build()
-				)
-				.hobbies(Arrays.asList("Coding", "Reading"))
-				.build();
+        Employee rahul = new Employee();
+        rahul.setId(1);
+        rahul.setFirstName("Rahul");
+        rahul.setLastName("Ghadage");
+        rahul.setAge(28);
+        rahul.setNoOfChildrens(0);
+        rahul.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
+        rahul.setSpouse(true);
+        rahul.setAddress(rahulAddress);
+        rahul.setPhoneNumbers(Arrays.asList(rahulsNo));
+        rahul.setHobbies(Arrays.asList("Coding", "Reading"));
 
-		PhoneNumber rahulsNo = PhoneNumber.builder()
-				.id(1)
-				.type("Mobile")
-				.number("1234567890")
-				.employee(rahul)
-				.build();
+        rahulAddress.setEmployee(rahul);
+        rahulsNo.setEmployee(rahul);
 
-		rahul.setPhoneNumbers(Arrays.asList(rahulsNo));
+        //********************************//
+        Address aryanAddress = new Address();
+        aryanAddress.setId(1);
+        aryanAddress.setStreetAddress("A road");
+        aryanAddress.setCity("Pune");
+        aryanAddress.setState("Maharashtra");
+        aryanAddress.setCountry("India");
+        aryanAddress.setPostalCode("411018");
 
+        PhoneNumber aryansNumber = new PhoneNumber();
+        aryansNumber.setId(1);
+        aryansNumber.setType("Mobile");
+        aryansNumber.setNumber("1234555555");
 
+        Employee aryan = new Employee();
+        aryan.setId(1);
+        aryan.setFirstName("Aryan");
+        aryan.setLastName("Ghadage");
+        aryan.setAge(28);
+        aryan.setNoOfChildrens(0);
+        aryan.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
+        aryan.setSpouse(true);
+        aryan.setAddress(aryanAddress);
+        aryan.setPhoneNumbers(Arrays.asList(aryansNumber));
+        aryan.setHobbies(Arrays.asList("Dancing", "Cooking"));
 
-
-
-
-		Employee aryan = Employee.builder()
-				.id(1)
-				.firstName("Aryan")
-				.lastName("Ghadage")
-				.age(28)
-				.noOfChildrens(0)
-				.dateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)))
-				.spouse(true)
-				.address(Address.builder()
-						.id(1)
-						.streetAddress("A road")
-						.city("Pune")
-						.state("Maharashtra")
-						.country("India")
-						.postalCode("411018")
-						.build()
-				)
-				.hobbies(Arrays.asList("Dancing", "Cooking"))
-				.build();
-
-		PhoneNumber aryansNumber = PhoneNumber.builder()
-				.id(1)
-				.type("Mobile")
-				.number("1234555555")
-				.employee(aryan)
-				.build();
-
-		aryan.setPhoneNumbers(Arrays.asList(aryansNumber));
-
-
-		return Arrays.asList(rahul, aryan);
-	};
+        aryanAddress.setEmployee(aryan);
+        aryansNumber.setEmployee(aryan);
+        return Arrays.asList(rahul, aryan);
+    };
 }

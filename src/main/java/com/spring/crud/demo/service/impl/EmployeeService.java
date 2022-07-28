@@ -1,6 +1,5 @@
 package com.spring.crud.demo.service.impl;
 
-import com.spring.crud.demo.model.Student;
 import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.repository.EmployeeRepository;
 import com.spring.crud.demo.service.IEmployeeService;
@@ -8,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -34,16 +34,19 @@ public class EmployeeService implements IEmployeeService {
         return employeeRepository.findAll(employeeExample);
     }
 
+    @Transactional
     @Override
     public Optional<Employee> saveEmployee(Employee employee) {
         return Optional.of(employeeRepository.save(employee));
     }
 
+    @Transactional
     @Override
     public Optional<Employee> updateEmployee(int id, Employee employee) {
         return (employeeRepository.existsById(id)) ? Optional.of(employeeRepository.save(employee)) : Optional.empty();
     }
 
+    @Transactional
     @Override
     public boolean deleteEmployee(int id) {
         Optional<Employee> optionalEmployee = findEmployeeById(id);

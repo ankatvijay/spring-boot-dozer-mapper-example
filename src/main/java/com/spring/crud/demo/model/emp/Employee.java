@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.spring.crud.demo.jakson.LocalDateTimeDeserializer;
 import com.spring.crud.demo.jakson.LocalDateTimeSerializer;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -18,12 +18,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
-@Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
+@ToString
 @Entity
-@Table(name = "EMPLOYEE")
+@Table(name = "EMPLOYEE", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class Employee implements Serializable {
 
     @Id
@@ -51,28 +51,30 @@ public class Employee implements Serializable {
     @Column(name = "DATE_OF_JOINING")
     private LocalDateTime dateOfJoining;
 
+    @ElementCollection
+    @CollectionTable(name = "HOBBIES", joinColumns = @JoinColumn(name = "ID"))
+    @Column(name = "HOBBY")
+    private List<String> hobbies = new ArrayList<>();
+
     @JsonManagedReference
-    @OneToOne(cascade = { 
-        		CascadeType.MERGE,
-   	    		CascadeType.PERSIST,
-   	    		CascadeType.REMOVE
+    @OneToOne(cascade = {
+            CascadeType.MERGE,
+            CascadeType.PERSIST,
+            CascadeType.REMOVE
     })
-    @JoinColumn(name="ADDRESS_ID")
+    @JoinColumn(name = "ADDRESS_ID")
     private Address address;
 
     @JsonManagedReference
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "employee", 
-	    cascade = { 
-	    		CascadeType.MERGE,
-	    		CascadeType.PERSIST,
-	    		CascadeType.REMOVE
-    })
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "employee",
+            orphanRemoval = true,
+            cascade = {
+                    CascadeType.MERGE,
+                    CascadeType.PERSIST,
+                    CascadeType.REMOVE
+            })
     private List<PhoneNumber> phoneNumbers;
 
-    @ElementCollection
-    @CollectionTable(name="HOBBIES", joinColumns = @JoinColumn(name="ID"))
-    @Column(name="HOBBY")
-    private List<String> hobbies = new ArrayList<>();
 
 }
 

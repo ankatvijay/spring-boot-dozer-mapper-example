@@ -1,22 +1,22 @@
 package com.spring.crud.demo.model.emp;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @XmlRootElement
-@Data
-@Builder
 @NoArgsConstructor
-@AllArgsConstructor
+@Getter
+@Setter
+@ToString(exclude = {"employee"})
 @Entity
-@Table(name = "ADDRESS")
+@Table(name = "ADDRESS", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class Address implements Serializable {
 
     @Id
@@ -40,11 +40,11 @@ public class Address implements Serializable {
     private String postalCode;
 
     @JsonBackReference
-    @OneToOne(mappedBy="address",
-    		cascade = { 
-    	    		CascadeType.MERGE,
-    	    		CascadeType.PERSIST,
-    	    		CascadeType.REMOVE
-    })
+    @OneToOne(mappedBy = "address",
+            cascade = {
+                    CascadeType.MERGE,
+                    CascadeType.PERSIST,
+                    CascadeType.REMOVE
+            })
     private Employee employee;
 }

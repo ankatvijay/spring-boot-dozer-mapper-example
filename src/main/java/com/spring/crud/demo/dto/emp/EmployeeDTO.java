@@ -4,6 +4,7 @@ import lombok.Data;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -29,6 +30,9 @@ public class EmployeeDTO implements Serializable {
 
     @Mapping(value = "this")
     private String dateOfJoining;
+
+    @Mapping(value = "hobbies")
+    private List<String> hobbies = new ArrayList<>();
 
     @Mapping(value = "address")
     private AddressDTO address;

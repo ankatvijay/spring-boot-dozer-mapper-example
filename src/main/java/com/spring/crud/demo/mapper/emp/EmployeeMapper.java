@@ -22,6 +22,8 @@ public class EmployeeMapper implements Serializable {
     public Employee convertFromDtoToEntity(EmployeeDTO employeeDTO) {
         Employee employee = dozerBeanMapper.map(employeeDTO, Employee.class);
         employee.setDateOfJoining(employeeDTO.getDateOfJoining() != null ? LocalDateTime.parse(employeeDTO.getDateOfJoining(), DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)) : null);
+        employee.getAddress().setEmployee(employee);
+        employee.getPhoneNumbers().forEach(phoneNumber -> phoneNumber.setEmployee(employee));
         return employee;
     }
 
