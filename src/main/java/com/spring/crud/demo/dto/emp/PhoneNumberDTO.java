@@ -10,7 +10,7 @@ import java.io.Serializable;
 public class PhoneNumberDTO implements Serializable {
 
     @Mapping(value = "id")
-    private int id;
+    private Integer id;
 
     @Mapping(value = "type")
     private String type;

@@ -17,12 +17,10 @@ public class SuperHeroMapper implements Serializable {
     private final DozerBeanMapper dozerBeanMapper;
 
     public SuperHero convertFromDtoToEntity(SuperHeroDTO superHeroDTO) {
-        SuperHero superHero = dozerBeanMapper.map(superHeroDTO, SuperHero.class);
-        return superHero;
+        return dozerBeanMapper.map(superHeroDTO, SuperHero.class);
     }
 
     public SuperHeroDTO convertFromEntityToDto(SuperHero superHero) {
-        SuperHeroDTO superHeroDTO = dozerBeanMapper.map(superHero, SuperHeroDTO.class);
-        return superHeroDTO;
+        return dozerBeanMapper.map(superHero, SuperHeroDTO.class);
     }
 }

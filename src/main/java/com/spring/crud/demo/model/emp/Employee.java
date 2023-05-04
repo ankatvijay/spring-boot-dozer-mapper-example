@@ -5,22 +5,19 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.spring.crud.demo.jakson.LocalDateTimeDeserializer;
 import com.spring.crud.demo.jakson.LocalDateTimeSerializer;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
+@Data
+@Builder
+@AllArgsConstructor
 @NoArgsConstructor
-@Getter
-@Setter
 @ToString
 @Entity
 @Table(name = "EMPLOYEE", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
@@ -29,7 +26,7 @@ public class Employee implements Serializable {
     @Id
     @GeneratedValue
     @Column(name = "ID")
-    private int id;
+    private Integer id;
 
     @Column(name = "FIRST_NAME")
     private String firstName;
@@ -38,13 +35,13 @@ public class Employee implements Serializable {
     private String lastName;
 
     @Column(name = "AGE")
-    private int age;
+    private Integer age;
 
     @Column(name = "NO_OF_CHILDRENS")
-    private int noOfChildrens;
+    private Integer noOfChildrens;
 
     @Column(name = "SPOUSE")
-    private boolean spouse;
+    private Boolean spouse;
 
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
@@ -54,7 +51,7 @@ public class Employee implements Serializable {
     @ElementCollection
     @CollectionTable(name = "HOBBIES", joinColumns = @JoinColumn(name = "ID"))
     @Column(name = "HOBBY")
-    private List<String> hobbies = new ArrayList<>();
+    private List<String> hobbies;
 
     @JsonManagedReference
     @OneToOne(cascade = {

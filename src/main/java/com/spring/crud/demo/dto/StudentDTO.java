@@ -9,10 +9,10 @@ import java.io.Serializable;
 public class StudentDTO implements Serializable {
 
 	@Mapping(value = "id")
-	private int id;
+	private Integer id;
 
 	@Mapping(value = "rollNo")
-	private int rollNo;
+	private Integer rollNo;
 
 	@Mapping(value = "firstName")
 	private String firstName;
@@ -24,5 +24,5 @@ public class StudentDTO implements Serializable {
 	private String dateOfBirth;
 
 	@Mapping(value = "marks")
-	private float marks;
+	private Float marks;
 }

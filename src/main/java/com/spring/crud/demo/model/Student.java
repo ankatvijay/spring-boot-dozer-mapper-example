@@ -26,10 +26,10 @@ public class Student implements Serializable {
 	@Id
 	@GeneratedValue
 	@Column(name = "ID")
-	private int id;
+	private Integer id;
 
 	@Column(name = "ROLL_NO")
-	private int rollNo;
+	private Integer rollNo;
 
 	@Column(name = "FIRST_NAME")
 	private String firstName;
@@ -43,6 +43,6 @@ public class Student implements Serializable {
 	private LocalDate dateOfBirth;
 
 	@Column(name = "MARKS")
-	private float marks;
+	private Float marks;
 	
 }

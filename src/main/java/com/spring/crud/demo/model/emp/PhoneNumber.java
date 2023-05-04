@@ -23,7 +23,7 @@ public class PhoneNumber implements Serializable {
     @Id
     @GeneratedValue
     @Column(name = "ID")
-    private int id;
+    private Integer id;
 
     @Column(name = "TYPE")
     private String type;

@@ -1,17 +1,17 @@
 package com.spring.crud.demo.dto.emp;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.List;
 
 @Data
 public class EmployeeDTO implements Serializable {
 
     @Mapping(value = "id")
-    private int id;
+    private Integer id;
 
     @Mapping(value = "firstName")
     private String firstName;
@@ -20,19 +20,19 @@ public class EmployeeDTO implements Serializable {
     private String lastName;
 
     @Mapping(value = "age")
-    private int age;
+    private Integer age;
 
     @Mapping(value = "noOfChildrens")
-    private int noOfChildrens;
+    private Integer noOfChildrens;
 
     @Mapping(value = "spouse")
-    private boolean spouse;
+    private Boolean spouse;
 
     @Mapping(value = "this")
     private String dateOfJoining;
 
     @Mapping(value = "hobbies")
-    private List<String> hobbies = new ArrayList<>();
+    private List<String> hobbies;
 
     @Mapping(value = "address")
     private AddressDTO address;

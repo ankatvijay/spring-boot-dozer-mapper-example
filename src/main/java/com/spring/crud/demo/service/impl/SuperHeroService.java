@@ -1,8 +1,9 @@
 package com.spring.crud.demo.service.impl;
 
-import com.spring.crud.demo.model.Student;
+import com.spring.crud.demo.exception.InternalServerErrorException;
+import com.spring.crud.demo.exception.NotFoundException;
+import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.SuperHero;
-import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.repository.SuperHeroRepository;
 import com.spring.crud.demo.service.ISuperHeroService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -37,13 +39,26 @@ public class SuperHeroService implements ISuperHeroService {
 
     @Override
     public Optional<SuperHero> saveSuperHero(SuperHero superHero) {
+        if (Objects.nonNull(superHero) && Objects.nonNull(superHero.getId()) && superHeroRepository.existsById(superHero.getId())) {
+            throw new RecordFoundException("Record already found with id " + superHero.getId());
+        }
         return Optional.of(superHeroRepository.save(superHero));
     }
 
     @Override
     public Optional<SuperHero> updateSuperHero(int id, SuperHero superHero) {
-        return (superHeroRepository.existsById(id)) ? Optional.of(superHeroRepository.save(superHero)) : Optional.empty();
-
+        if (id > 0 && Objects.nonNull(superHero) && Objects.nonNull(superHero.getId())) {
+            if (id == superHero.getId().intValue()) {
+                if (superHeroRepository.existsById(id)) {
+                    return Optional.of(superHeroRepository.save(superHero));
+                }
+                throw new NotFoundException("No record found with id " + id);
+            } else {
+                throw new InternalServerErrorException("Update Record id: " + id + " not equal to payload id: " + superHero.getId());
+            }
+        } else {
+            throw new NullPointerException("Payload record id is null");
+        }
     }
 
     @Override

@@ -21,7 +21,7 @@ public class SuperHero implements Serializable {
     @Id
     @GeneratedValue
     @Column(name = "ID")
-    private int id;
+    private Integer id;
 
     @Column(name = "NAME")
     private String name;
@@ -33,8 +33,8 @@ public class SuperHero implements Serializable {
     private String profession;
 
     @Column(name = "AGE")
-    private int age;
+    private Integer age;
 
     @Column(name = "CAN_FLY")
-    private boolean canFly;
+    private Boolean canFly;
 }

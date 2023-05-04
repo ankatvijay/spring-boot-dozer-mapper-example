@@ -93,7 +93,13 @@
             <version>1.5.9</version>
         </dependency>
 
-        <!-- testing dependency start -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- testing dependency start
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -117,8 +123,28 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- testing dependency end -->
+         testing dependency end -->
     </dependencies>
+
+	<repositories>
+		<repository>
+			<id>ankat-maven-group</id>
+			<url>https://nexus.codeexample.in/nexus/repository/ankat-maven-group/</url>
+		</repository>
+	</repositories>
+
+	<distributionManagement>
+		<repository>
+			<id>ankat-maven-releases</id>
+			<name>Internal Releases</name>
+			<url>https://nexus.codeexample.in/nexus/repository/ankat-maven-releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>ankat-maven-snapshots</id>
+			<name>Snapshot Releases</name>
+			<url>https://nexus.codeexample.in/nexus/repository/ankat-maven-snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
 
     <build>
         <plugins>

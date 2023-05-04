@@ -9,7 +9,7 @@ import java.io.Serializable;
 public class AddressDTO implements Serializable {
 
     @Mapping(value = "id")
-    private int id;
+    private Integer id;
 
     @Mapping(value = "streetAddress")
     private String streetAddress;

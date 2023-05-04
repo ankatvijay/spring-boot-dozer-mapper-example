@@ -53,7 +53,7 @@ public class EmployeeController {
             List<Employee> employeeList = employeeService.findEmployeesByExample(employeeMapper.convertFromDtoToEntity(employeeDTO));
             return ResponseEntity.status(HttpStatus.OK).body(employeeList.stream().map(employee -> employeeMapper.convertFromEntityToDto(employee)).collect(Collectors.toList()));
         } catch (Exception ex) {
-            throw new IllegalArgumentException("Something went wrong");
+            throw new IllegalArgumentException("Something went wrong " + ex.getMessage());
         }
     }
 

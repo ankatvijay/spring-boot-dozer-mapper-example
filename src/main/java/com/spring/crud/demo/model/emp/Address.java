@@ -22,7 +22,7 @@ public class Address implements Serializable {
     @Id
     @GeneratedValue
     @Column(name = "ID")
-    private int id;
+    private Integer id;
 
     @Column(name = "STREET_ADDRESS")
     private String streetAddress;

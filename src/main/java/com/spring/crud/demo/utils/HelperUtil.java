@@ -68,7 +68,7 @@ public class HelperUtil {
         rahul.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
         rahul.setSpouse(true);
         rahul.setAddress(rahulAddress);
-        rahul.setPhoneNumbers(Arrays.asList(rahulsNo));
+        rahul.setPhoneNumbers(List.of(rahulsNo));
         rahul.setHobbies(Arrays.asList("Coding", "Reading"));
 
         rahulAddress.setEmployee(rahul);
@@ -95,9 +95,9 @@ public class HelperUtil {
         aryan.setAge(28);
         aryan.setNoOfChildrens(0);
         aryan.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
-        aryan.setSpouse(true);
+        aryan.setSpouse(false);
         aryan.setAddress(aryanAddress);
-        aryan.setPhoneNumbers(Arrays.asList(aryansNumber));
+        aryan.setPhoneNumbers(List.of(aryansNumber));
         aryan.setHobbies(Arrays.asList("Dancing", "Cooking"));
 
         aryanAddress.setEmployee(aryan);
