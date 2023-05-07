@@ -5,6 +5,7 @@ import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.Student;
 import com.spring.crud.demo.repository.StudentRepository;
+import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.HelperUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
@@ -19,6 +20,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,16 +72,17 @@ class StudentServiceTest {
     void testGivenId_WhenFindSuperHeroById_ThenReturnRecord() {
         // Given
         int id = 12;
-        Optional<Student> optionalSpiderMan = HelperUtil.studentSupplier.get().stream().filter(superHero -> superHero.getFirstName().equals("Spider Man")).findFirst();
+        Optional<Student> optionalRahulGhadage = HelperUtil.studentSupplier.get().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
 
         // When
-        Mockito.when(studentRepository.findById(id)).thenReturn(optionalSpiderMan);
-        Optional<Student> actualSuperHero = studentService.findStudentById(id);
+        Mockito.when(studentRepository.findById(id)).thenReturn(optionalRahulGhadage);
+        Optional<Student> actualStudent = studentService.findStudentById(id);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).isNotEmpty();
-        Assertions.assertThat(actualSuperHero.get()).isEqualTo(optionalSpiderMan.get());
+        Assertions.assertThat(actualStudent).isNotNull();
+        Assertions.assertThat(actualStudent).isNotEmpty();
+        Assertions.assertThat(actualStudent.isPresent()).isTrue();
+        Assertions.assertThat(actualStudent.get()).isEqualTo(optionalRahulGhadage.get());
         Mockito.verify(studentRepository).findById(id);
     }
 
@@ -87,14 +90,14 @@ class StudentServiceTest {
     void testGivenRandomId_WhenFindSuperHeroById_ThenReturnRecord() {
         // Given
         Integer id = RandomUtils.nextInt();
-        Optional<Student> optionalSpiderMan = Optional.empty();
+        Optional<Student> optionalRahulGhadage = Optional.empty();
 
         // When
-        Mockito.when(studentRepository.findById(id)).thenReturn(optionalSpiderMan);
-        Optional<Student> actualSuperHero = studentService.findStudentById(id);
+        Mockito.when(studentRepository.findById(id)).thenReturn(optionalRahulGhadage);
+        Optional<Student> actualStudent = studentService.findStudentById(id);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isEmpty();
+        Assertions.assertThat(actualStudent).isEmpty();
         Mockito.verify(studentRepository).findById(id);
     }
 
@@ -106,59 +109,59 @@ class StudentServiceTest {
     @Test
     void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() {
         // Given
-        Student superHero = Student.builder().rollNo(25).firstName("Wade").lastName("Deadpool").dateOfBirth(LocalDate.now()).marks(28f).build();
+        Student student = Student.builder().rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
 
         // When
-        Mockito.when(studentRepository.save(superHero)).thenReturn(superHero);
-        Optional<Student> actualSuperHero = studentService.saveStudent(superHero);
+        Mockito.when(studentRepository.save(student)).thenReturn(student);
+        Optional<Student> actualStudent = studentService.saveStudent(student);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).isNotEmpty();
-        Assertions.assertThat(actualSuperHero.get().getRollNo()).isEqualTo(25);
-        Assertions.assertThat(actualSuperHero.get().getFirstName()).isEqualTo("Deadpool");
-        Assertions.assertThat(actualSuperHero.get().getLastName()).isEqualTo("Street fighter");
-        Assertions.assertThat(actualSuperHero.get().getDateOfBirth()).isEqualTo(LocalDate.now());
-        Assertions.assertThat(actualSuperHero.get().getMarks()).isEqualTo(45f);
-        Mockito.verify(studentRepository).save(superHero);
+        Assertions.assertThat(actualStudent).isNotNull();
+        Assertions.assertThat(actualStudent).isNotEmpty();
+        Assertions.assertThat(actualStudent.get().getRollNo()).isEqualTo(2);
+        Assertions.assertThat(actualStudent.get().getFirstName()).isEqualTo("Rahul");
+        Assertions.assertThat(actualStudent.get().getLastName()).isEqualTo("Ghadage");
+        Assertions.assertThat(actualStudent.get().getMarks()).isEqualTo(950.0f);
+        Assertions.assertThat(actualStudent.get().getDateOfBirth()).isEqualTo(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)));
+        Mockito.verify(studentRepository).save(student);
     }
 
     @Test
     void testGivenExistingSuperHero_WhenSaveSuperHero_ThenThrowError() {
         // Given
-        Student superHero = Student.builder().rollNo(25).firstName("Wade").lastName("Deadpool").dateOfBirth(LocalDate.now()).marks(28f).build();
+        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
 
         // When
-        Mockito.when(studentRepository.existsById(superHero.getId())).thenReturn(true);
-        Assertions.assertThatThrownBy(() -> studentService.saveStudent(superHero))
+        Mockito.when(studentRepository.existsById(student.getId())).thenReturn(true);
+        Assertions.assertThatThrownBy(() -> studentService.saveStudent(student))
                 .isInstanceOf(RecordFoundException.class)
-                .hasMessage("Record already found with id " + superHero.getId());
+                .hasMessage("Record already found with id " + student.getId());
 
         // Then
-        Mockito.verify(studentRepository).existsById(superHero.getId());
+        Mockito.verify(studentRepository).existsById(student.getId());
     }
 
     @Test
     void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() {
         // Given
-        Student superHero = Student.builder().rollNo(25).firstName("Wade").lastName("Deadpool").dateOfBirth(LocalDate.now()).marks(28f).build();
+        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
 
         // When
-        Mockito.when(studentRepository.existsById(superHero.getId())).thenReturn(true);
-        Mockito.when(studentRepository.save(superHero)).thenReturn(superHero);
-        Optional<Student> actualSuperHero = studentService.updateStudent(superHero.getId(), superHero);
+        Mockito.when(studentRepository.existsById(student.getId())).thenReturn(true);
+        Mockito.when(studentRepository.save(student)).thenReturn(student);
+        Optional<Student> actualStudent = studentService.updateStudent(student.getId(), student);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).isNotEmpty();
-        Assertions.assertThat(actualSuperHero.get().getId()).isEqualTo(15);
-        Assertions.assertThat(actualSuperHero.get().getRollNo()).isEqualTo(25);
-        Assertions.assertThat(actualSuperHero.get().getFirstName()).isEqualTo("Deadpool");
-        Assertions.assertThat(actualSuperHero.get().getLastName()).isEqualTo("Street fighter");
-        Assertions.assertThat(actualSuperHero.get().getDateOfBirth()).isEqualTo(LocalDate.now());
-        Assertions.assertThat(actualSuperHero.get().getMarks()).isEqualTo(45f);
-        Mockito.verify(studentRepository).existsById(superHero.getId());
-        Mockito.verify(studentRepository).save(superHero);
+        Assertions.assertThat(actualStudent).isNotNull();
+        Assertions.assertThat(actualStudent).isNotEmpty();
+        Assertions.assertThat(actualStudent.get().getId()).isEqualTo(25);
+        Assertions.assertThat(actualStudent.get().getRollNo()).isEqualTo(2);
+        Assertions.assertThat(actualStudent.get().getFirstName()).isEqualTo("Rahul");
+        Assertions.assertThat(actualStudent.get().getLastName()).isEqualTo("Ghadage");
+        Assertions.assertThat(actualStudent.get().getMarks()).isEqualTo(950.0f);
+        Assertions.assertThat(actualStudent.get().getDateOfBirth()).isEqualTo(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)));
+        Mockito.verify(studentRepository).existsById(student.getId());
+        Mockito.verify(studentRepository).save(student);
     }
 
     @Test
@@ -176,41 +179,41 @@ class StudentServiceTest {
     void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() {
         // Given
         int id = RandomUtils.nextInt();
-        Student superHero = Student.builder().rollNo(25).firstName("Wade").lastName("Deadpool").dateOfBirth(LocalDate.now()).marks(28f).build();
+        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
 
         // When & Then
-        Assertions.assertThatThrownBy(() -> studentService.updateStudent(id, superHero))
+        Assertions.assertThatThrownBy(() -> studentService.updateStudent(id, student))
                 .isInstanceOf(InternalServerErrorException.class)
-                .hasMessage("Update Record id: " + id + " not equal to payload id: " + superHero.getId());
+                .hasMessage("Update Record id: " + id + " not equal to payload id: " + student.getId());
     }
 
     @Test
     void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() {
         // Given
-        Student superHero = Student.builder().rollNo(25).firstName("Wade").lastName("Deadpool").dateOfBirth(LocalDate.now()).marks(28f).build();
+        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
 
         // When
-        Mockito.when(studentRepository.existsById(superHero.getId())).thenReturn(false);
+        Mockito.when(studentRepository.existsById(student.getId())).thenReturn(false);
 
         // Then
-        Assertions.assertThatThrownBy(() -> studentService.updateStudent(superHero.getId(), superHero))
+        Assertions.assertThatThrownBy(() -> studentService.updateStudent(student.getId(), student))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("No record found with id " + superHero.getId());
-        Mockito.verify(studentRepository).existsById(superHero.getId());
+                .hasMessage("No record found with id " + student.getId());
+        Mockito.verify(studentRepository).existsById(student.getId());
     }
 
     @Test
     void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() {
         // Given
-        Student superHero = Student.builder().rollNo(25).firstName("Wade").lastName("Deadpool").dateOfBirth(LocalDate.now()).marks(28f).build();
+        Student student = Student.builder().id(78).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
 
         // When
-        Mockito.when(studentRepository.findById(superHero.getId())).thenReturn(Optional.of(superHero));
-        Boolean flag = studentService.deleteStudent(superHero.getId());
+        Mockito.when(studentRepository.findById(student.getId())).thenReturn(Optional.of(student));
+        Boolean flag = studentService.deleteStudent(student.getId());
 
         // Then
         Assertions.assertThat(flag).isTrue();
-        Mockito.verify(studentRepository).findById(superHero.getId());
+        Mockito.verify(studentRepository).findById(student.getId());
     }
 
     @Test
