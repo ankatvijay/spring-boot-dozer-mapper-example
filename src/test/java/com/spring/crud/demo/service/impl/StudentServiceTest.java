@@ -18,9 +18,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Example;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,7 +83,6 @@ class StudentServiceTest {
         // Then
         Assertions.assertThat(actualStudent).isNotNull();
         Assertions.assertThat(actualStudent).isNotEmpty();
-        Assertions.assertThat(actualStudent.isPresent()).isTrue();
         Assertions.assertThat(actualStudent.get()).isEqualTo(optionalRahulGhadage.get());
         Mockito.verify(studentRepository).findById(id);
     }
@@ -102,8 +103,34 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenExample_WhenFindSuperHerosByExample_ThenReturnRecords() {
+    void testGivenStudent_WhenFindSuperHerosByExample_ThenReturnRecords() {
+        // Given
+        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
 
+        // When
+        Mockito.when(studentRepository.findAll((Example) Mockito.any())).thenReturn(List.of(student));
+        List<Student> actualStudents = studentService.findStudentsByExample(student);
+
+        // Then
+        Assertions.assertThat(actualStudents).isNotNull();
+        Assertions.assertThat(actualStudents).isNotEmpty();
+        Assertions.assertThat(actualStudents.size()).isEqualTo(1);
+        Assertions.assertThat(actualStudents.get(0)).isEqualTo(student);
+    }
+
+    @Test
+    void testGivenRandomStudent_WhenFindStudentByExample_ThenReturnRecords() {
+        // Given
+        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        List<Student> students = new ArrayList<>();
+
+        // When
+        Mockito.when(studentRepository.findAll((Example) Mockito.any())).thenReturn(students);
+        List<Student> actualStudents = studentService.findStudentsByExample(student);
+
+        // Then
+        Assertions.assertThat(actualStudents).isNotNull();
+        Assertions.assertThat(actualStudents).isEmpty();
     }
 
     @Test

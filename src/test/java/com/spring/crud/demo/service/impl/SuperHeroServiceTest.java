@@ -17,7 +17,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Example;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -98,8 +100,35 @@ class SuperHeroServiceTest {
     }
 
     @Test
-    void testGivenExample_WhenFindSuperHerosByExample_ThenReturnRecords() {
+    void testGivenSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
+        // Given
+        SuperHero superHero = SuperHero.builder().id(25).name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
 
+        // When
+        Mockito.when(superHeroRepository.findAll((Example) Mockito.any())).thenReturn(List.of(superHero));
+        List<SuperHero> actualSuperHeros = superHeroService.findSuperHerosByExample(superHero);
+
+        // Then
+        Assertions.assertThat(actualSuperHeros).isNotNull();
+        Assertions.assertThat(actualSuperHeros).isNotEmpty();
+        Assertions.assertThat(actualSuperHeros.size()).isEqualTo(1);
+        Assertions.assertThat(actualSuperHeros.get(0)).isEqualTo(superHero);
+    }
+
+    @Test
+    void testGivenRandomSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
+        // Given
+        SuperHero superHero = SuperHero.builder().id(100).name("Bruce Wayne").superName("Batman").profession("Business man").age(35).canFly(true).build();
+        List<SuperHero> superHeroes = new ArrayList<>();
+
+        // When
+        Mockito.when(superHeroRepository.findAll((Example) Mockito.any())).thenReturn(superHeroes);
+        List<SuperHero> actualSuperHeros = superHeroService.findSuperHerosByExample(superHero);
+
+        // Then
+        Assertions.assertThat(actualSuperHeros).isNotNull();
+        Assertions.assertThat(actualSuperHeros).isEmpty();
+        Assertions.assertThat(actualSuperHeros.size()).isEqualTo(0);
     }
 
     @Test
