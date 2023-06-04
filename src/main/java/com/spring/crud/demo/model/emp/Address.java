@@ -11,10 +11,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @XmlRootElement
-@NoArgsConstructor
 @Getter
 @Setter
-@ToString(exclude = {"employee"})
+@NoArgsConstructor
 @Entity
 @Table(name = "ADDRESS", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class Address implements Serializable {

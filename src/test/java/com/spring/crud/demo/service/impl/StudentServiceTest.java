@@ -105,7 +105,7 @@ class StudentServiceTest {
     @Test
     void testGivenStudent_WhenFindSuperHerosByExample_ThenReturnRecords() {
         // Given
-        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
 
         // When
         Mockito.when(studentRepository.findAll((Example) Mockito.any())).thenReturn(List.of(student));
@@ -121,7 +121,7 @@ class StudentServiceTest {
     @Test
     void testGivenRandomStudent_WhenFindStudentByExample_ThenReturnRecords() {
         // Given
-        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
         List<Student> students = new ArrayList<>();
 
         // When
@@ -136,7 +136,7 @@ class StudentServiceTest {
     @Test
     void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() {
         // Given
-        Student student = Student.builder().rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
 
         // When
         Mockito.when(studentRepository.save(student)).thenReturn(student);
@@ -156,7 +156,8 @@ class StudentServiceTest {
     @Test
     void testGivenExistingSuperHero_WhenSaveSuperHero_ThenThrowError() {
         // Given
-        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
+        student.setId(25);
 
         // When
         Mockito.when(studentRepository.existsById(student.getId())).thenReturn(true);
@@ -171,7 +172,8 @@ class StudentServiceTest {
     @Test
     void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() {
         // Given
-        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
+        student.setId(25);
 
         // When
         Mockito.when(studentRepository.existsById(student.getId())).thenReturn(true);
@@ -206,7 +208,8 @@ class StudentServiceTest {
     void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() {
         // Given
         int id = RandomUtils.nextInt();
-        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
+        student.setId(25);
 
         // When & Then
         Assertions.assertThatThrownBy(() -> studentService.updateStudent(id, student))
@@ -217,7 +220,8 @@ class StudentServiceTest {
     @Test
     void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() {
         // Given
-        Student student = Student.builder().id(25).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
+        student.setId(25);
 
         // When
         Mockito.when(studentRepository.existsById(student.getId())).thenReturn(false);
@@ -232,7 +236,8 @@ class StudentServiceTest {
     @Test
     void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() {
         // Given
-        Student student = Student.builder().id(78).rollNo(2).firstName("Rahul").lastName("Ghadage").marks(950.0f).dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student student = new Student(2,"Rahul","Ghadage",LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)),950.0f);
+        student.setId(25);
 
         // When
         Mockito.when(studentRepository.findById(student.getId())).thenReturn(Optional.of(student));

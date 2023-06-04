@@ -14,11 +14,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @XmlRootElement
-@Data
-@Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
-@ToString
 @Entity
 @Table(name = "EMPLOYEE", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class Employee implements Serializable {

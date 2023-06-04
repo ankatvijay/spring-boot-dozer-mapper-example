@@ -21,6 +21,7 @@ import org.springframework.data.domain.ExampleMatcher;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -36,7 +37,7 @@ class StudentRepositoryTest {
     @BeforeAll
     static void init() {
         expectedStudents = HelperUtil.studentSupplier.get().stream()
-                .map(student ->  AssertionsForClassTypes.tuple(student.getRollNo(),
+                .map(student -> AssertionsForClassTypes.tuple(student.getRollNo(),
                         student.getFirstName(),
                         student.getLastName(),
                         student.getDateOfBirth(),
@@ -67,7 +68,7 @@ class StudentRepositoryTest {
     void testGivenId_WhenFindById_ThenReturnRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         Optional<Student> actualStudent = studentRepository.findById(expectedRahulGhadage.getId());
@@ -82,7 +83,7 @@ class StudentRepositoryTest {
     void testGivenId_WhenFindByRollNo_ThenReturnRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         Optional<Student> actualStudent = studentRepository.findByRollNo(expectedRahulGhadage.getRollNo());
@@ -97,7 +98,7 @@ class StudentRepositoryTest {
     void testGivenId_WhenFindByFirstName_ThenReturnRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         Optional<Student> actualStudent = studentRepository.findByFirstName(expectedRahulGhadage.getFirstName());
@@ -112,7 +113,7 @@ class StudentRepositoryTest {
     void testGivenId_WhenFindByFirstName_IgnoreCaseThenReturnRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         List<Student> actualStudents = studentRepository.findByFirstNameIgnoreCase(expectedRahulGhadage.getFirstName().toLowerCase());
@@ -128,7 +129,7 @@ class StudentRepositoryTest {
     void testGivenId_WhenFindByLastName_IgnoreCaseThenReturnRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         List<Student> actualStudents = studentRepository.findByLastNameIgnoreCase(expectedRahulGhadage.getLastName().toLowerCase());
@@ -144,10 +145,10 @@ class StudentRepositoryTest {
     void testGivenId_WhenFindByFirstNameLike_ThenReturnRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
-        List<Student> actualStudents = studentRepository.findByFirstNameLike("%"+expectedRahulGhadage.getFirstName().substring(1,5)+"%");
+        List<Student> actualStudents = studentRepository.findByFirstNameLike("%" + expectedRahulGhadage.getFirstName().substring(1, 5) + "%");
 
         // Then
         Assertions.assertThat(actualStudents).isNotNull();
@@ -189,7 +190,7 @@ class StudentRepositoryTest {
     void testGivenId_WhenExistsById_ThenReturnRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         Boolean actualStudent = studentRepository.existsById(expectedRahulGhadage.getId());
@@ -216,7 +217,7 @@ class StudentRepositoryTest {
     void testGivenExample_WhenFindByExample_ThenReturn1Record() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student exampleStudent = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student exampleStudent = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         Example<Student> studentExample = Example.of(exampleStudent, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
@@ -260,7 +261,7 @@ class StudentRepositoryTest {
     @Test
     void test_saveGivenStudent_WhenSave_ThenReturnStudent() {
         // Given
-        Student salmanKhan = Student.builder().rollNo(99).firstName("Salman").lastName("Khan").dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).marks(600.0f).build();
+        Student salmanKhan = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
 
         // When
         Student student = studentRepository.save(salmanKhan);
@@ -278,7 +279,7 @@ class StudentRepositoryTest {
     void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         studentRepository.deleteById(expectedRahulGhadage.getId());
@@ -292,11 +293,11 @@ class StudentRepositoryTest {
     void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
         // Given
         Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Student.builder().build());
+        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Student());
 
         // When
         Optional<Student> optionalStudent = studentRepository.findById(expectedRahulGhadage.getId());
-        Student editStudent = optionalStudent.orElseGet(() -> Student.builder().build());
+        Student editStudent = optionalStudent.orElseGet(() -> new Student());
         editStudent.setMarks(999.0f);
         Student student = studentRepository.save(editStudent);
 
@@ -337,7 +338,9 @@ class StudentRepositoryTest {
     }
 
     private static Stream<Arguments> generateExample() {
-        Student studentWithDateOfBirth = Student.builder().dateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT))).build();
+        Student studentWithDateOfBirth = new Student();
+        studentWithDateOfBirth.setDateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)));
+
         return Stream.of(
                 Arguments.of(Example.of(studentWithDateOfBirth, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 10)
         );

@@ -102,7 +102,7 @@ class SuperHeroServiceTest {
     @Test
     void testGivenSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
         // Given
-        SuperHero superHero = SuperHero.builder().id(25).name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
+        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
 
         // When
         Mockito.when(superHeroRepository.findAll((Example) Mockito.any())).thenReturn(List.of(superHero));
@@ -118,7 +118,7 @@ class SuperHeroServiceTest {
     @Test
     void testGivenRandomSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
         // Given
-        SuperHero superHero = SuperHero.builder().id(100).name("Bruce Wayne").superName("Batman").profession("Business man").age(35).canFly(true).build();
+        SuperHero superHero = new SuperHero("Bruce Wayne","Batman","Business man",35,true);
         List<SuperHero> superHeroes = new ArrayList<>();
 
         // When
@@ -134,7 +134,7 @@ class SuperHeroServiceTest {
     @Test
     void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() {
         // Given
-        SuperHero superHero = SuperHero.builder().name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
+        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
 
         // When
         Mockito.when(superHeroRepository.save(superHero)).thenReturn(superHero);
@@ -154,7 +154,8 @@ class SuperHeroServiceTest {
     @Test
     void testGivenExistingSuperHero_WhenSaveSuperHero_ThenThrowError() {
         // Given
-        SuperHero superHero = SuperHero.builder().id(15).name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
+        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        superHero.setId(15);
 
         // When
         Mockito.when(superHeroRepository.existsById(superHero.getId())).thenReturn(true);
@@ -169,7 +170,8 @@ class SuperHeroServiceTest {
     @Test
     void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() {
         // Given
-        SuperHero superHero = SuperHero.builder().id(15).name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
+        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        superHero.setId(15);
 
         // When
         Mockito.when(superHeroRepository.existsById(superHero.getId())).thenReturn(true);
@@ -204,7 +206,8 @@ class SuperHeroServiceTest {
     void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() {
         // Given
         int id = RandomUtils.nextInt();
-        SuperHero superHero = SuperHero.builder().id(15).name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
+        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        superHero.setId(15);
 
         // When & Then
         Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(id, superHero))
@@ -215,7 +218,8 @@ class SuperHeroServiceTest {
     @Test
     void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() {
         // Given
-        SuperHero superHero = SuperHero.builder().id(15).name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
+        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        superHero.setId(15);
 
         // When
         Mockito.when(superHeroRepository.existsById(superHero.getId())).thenReturn(false);
@@ -230,7 +234,8 @@ class SuperHeroServiceTest {
     @Test
     void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() {
         // Given
-        SuperHero superHero = SuperHero.builder().id(15).name("Wade").superName("Deadpool").profession("Street fighter").age(28).canFly(false).build();
+        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        superHero.setId(15);
 
         // When
         Mockito.when(superHeroRepository.findById(superHero.getId())).thenReturn(Optional.of(superHero));

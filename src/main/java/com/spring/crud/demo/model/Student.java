@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.spring.crud.demo.jakson.LocalDateDeserializer;
 import com.spring.crud.demo.jakson.LocalDateSerializer;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -15,9 +12,8 @@ import java.io.Serializable;
 import java.time.LocalDate;
 
 @XmlRootElement
-@Data
-@Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
 @Table(name = "STUDENT")
@@ -44,5 +40,12 @@ public class Student implements Serializable {
 
 	@Column(name = "MARKS")
 	private Float marks;
-	
+
+	public Student(Integer rollNo, String firstName, String lastName, LocalDate dateOfBirth, Float marks) {
+		this.rollNo = rollNo;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.dateOfBirth = dateOfBirth;
+		this.marks = marks;
+	}
 }

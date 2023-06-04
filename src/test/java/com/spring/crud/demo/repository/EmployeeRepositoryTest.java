@@ -84,7 +84,7 @@ class EmployeeRepositoryTest {
     void testGivenId_WhenFindById_ThenReturnRecord() {
         // Given
         Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Employee.builder().build());
+        Employee expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Employee());
 
         // When
         Optional<Employee> actualEmployee = employeeRepository.findById(expectedRahulGhadage.getId());
@@ -99,7 +99,7 @@ class EmployeeRepositoryTest {
     void testGivenId_WhenExistsById_ThenReturnRecord() {
         // Given
         Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> Employee.builder().build());
+        Employee expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Employee());
 
         // When
         Boolean actualEmployee = employeeRepository.existsById(expectedRahulGhadage.getId());
@@ -126,7 +126,7 @@ class EmployeeRepositoryTest {
     void testGivenExample_WhenFindByExample_ThenReturn1Record() {
         // Given
         Optional<Employee> optionalRahulGhadage = HelperUtil.employeeSupplier.get().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> Employee.builder().build());
+        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> new Employee());
         exampleEmployee.setId(null);
         exampleEmployee.setAddress(null);
 
@@ -200,7 +200,12 @@ class EmployeeRepositoryTest {
     @Test
     void test_saveGivenEmployee_WhenSave_ThenReturnEmployee() {
         // Given
-        Employee natasha = Employee.builder().firstName("Natasha").lastName("Black Widow").noOfChildrens(1).age(35).spouse(false).build();
+        Employee natasha = new Employee();
+        natasha.setFirstName("Natasha");
+        natasha.setLastName("Black Widow");
+        natasha.setNoOfChildrens(1);
+        natasha.setAge(35);
+        natasha.setSpouse(false);
 
         // When
         Employee employee = employeeRepository.save(natasha);
@@ -220,7 +225,7 @@ class EmployeeRepositoryTest {
     void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
         // Given
         Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> Employee.builder().build());
+        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> new Employee());
 
         // When
         employeeRepository.deleteById(exampleEmployee.getId());
@@ -234,11 +239,11 @@ class EmployeeRepositoryTest {
     void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
         // Given
         Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> Employee.builder().build());
+        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> new Employee());
 
         // When
         Optional<Employee> optionalEmployee = employeeRepository.findById(exampleEmployee.getId());
-        Employee editEmployee = optionalEmployee.orElseGet(() -> Employee.builder().build());
+        Employee editEmployee = optionalEmployee.orElseGet(() -> new Employee());
         editEmployee.setAge(18);
         Employee employee = employeeRepository.save(editEmployee);
 
@@ -281,8 +286,12 @@ class EmployeeRepositoryTest {
     }
 
     private static Stream<Arguments> generateExample() {
-        Employee canFlyEmployees = Employee.builder().spouse(true).build();
-        Employee cannotFlyEmployees = Employee.builder().spouse(false).build();
+        Employee canFlyEmployees = new Employee();
+        canFlyEmployees.setSpouse(true);
+
+        Employee cannotFlyEmployees = new Employee();
+        cannotFlyEmployees.setSpouse(false);
+
         return Stream.of(
                 Arguments.of(Example.of(canFlyEmployees, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 1),
                 Arguments.of(Example.of(cannotFlyEmployees, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 1)

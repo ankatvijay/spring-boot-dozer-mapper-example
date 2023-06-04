@@ -12,10 +12,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @XmlRootElement
-@NoArgsConstructor
 @Getter
 @Setter
-@ToString(exclude = {"employee"})
+@NoArgsConstructor
 @Entity
 @Table(name = "PHONE_NUMBER", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class PhoneNumber implements Serializable {

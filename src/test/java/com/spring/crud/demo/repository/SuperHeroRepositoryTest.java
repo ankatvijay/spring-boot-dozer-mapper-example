@@ -64,7 +64,7 @@ class SuperHeroRepositoryTest {
     void testGivenId_WhenFindById_ThenReturnRecord() {
         // Given
         Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> SuperHero.builder().build());
+        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
         // When
         Optional<SuperHero> actualSuperHero = superHeroRepository.findById(expectedSpiderMan.getId());
 
@@ -78,7 +78,7 @@ class SuperHeroRepositoryTest {
     void testGivenId_WhenExistsById_ThenReturnRecord() {
         // Given
         Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> SuperHero.builder().build());
+        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
 
         // When
         Boolean actualSuperHero = superHeroRepository.existsById(expectedSpiderMan.getId());
@@ -105,7 +105,7 @@ class SuperHeroRepositoryTest {
     void testGivenExample_WhenFindByExample_ThenReturn1Record() {
         // Given
         Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero exampleSuperHero = optionalSpiderMan.orElseGet(() -> SuperHero.builder().build());
+        SuperHero exampleSuperHero = optionalSpiderMan.orElseGet(() -> new SuperHero());
 
         // When
         Example<SuperHero> superHeroExample = Example.of(exampleSuperHero, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
@@ -149,7 +149,7 @@ class SuperHeroRepositoryTest {
     @Test
     void test_saveGivenSuperHero_WhenSave_ThenReturnSuperHero() {
         // Given
-        SuperHero natasha = SuperHero.builder().name("Natasha").superName("Black Widow").profession("Agent").age(35).canFly(false).build();
+        SuperHero natasha = new SuperHero("Natasha", "Black Widow", "Agent", 35, false);
 
         // When
         SuperHero superHero = superHeroRepository.save(natasha);
@@ -167,7 +167,7 @@ class SuperHeroRepositoryTest {
     void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
         // Given
         Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> SuperHero.builder().build());
+        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
 
         // When
         superHeroRepository.deleteById(expectedSpiderMan.getId());
@@ -181,11 +181,11 @@ class SuperHeroRepositoryTest {
     void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
         // Given
         Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> SuperHero.builder().build());
+        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
 
         // When
         Optional<SuperHero> optionalSuperHero = superHeroRepository.findById(expectedSpiderMan.getId());
-        SuperHero editSuperHero = optionalSuperHero.orElseGet(() -> SuperHero.builder().build());
+        SuperHero editSuperHero = optionalSuperHero.orElseGet(() -> new SuperHero());
         editSuperHero.setAge(18);
         SuperHero superHero = superHeroRepository.save(editSuperHero);
 
@@ -226,8 +226,12 @@ class SuperHeroRepositoryTest {
     }
 
     private static Stream<Arguments> generateExample() {
-        SuperHero canFlySuperHeros = SuperHero.builder().canFly(true).build();
-        SuperHero cannotFlySuperHeros = SuperHero.builder().canFly(false).build();
+        SuperHero canFlySuperHeros = new SuperHero();
+        canFlySuperHeros.setCanFly(true);
+
+        SuperHero cannotFlySuperHeros = new SuperHero();
+        cannotFlySuperHeros.setCanFly(false);
+
         return Stream.of(
                 Arguments.of(Example.of(canFlySuperHeros, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 2),
                 Arguments.of(Example.of(cannotFlySuperHeros, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 3)
