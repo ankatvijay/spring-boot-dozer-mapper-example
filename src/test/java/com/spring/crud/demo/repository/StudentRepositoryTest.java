@@ -26,7 +26,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @DataJpaTest
@@ -35,8 +34,6 @@ class StudentRepositoryTest {
 
     @Autowired
     private StudentRepository studentRepository;
-
-    private static Tuple[] expectedStudents = null;
 
     private static List<Student> students;
 
@@ -50,18 +47,21 @@ class StudentRepositoryTest {
 
     @BeforeEach
     void init() {
-        expectedStudents = students.stream()
+        studentRepository.deleteAll();
+
+    }
+
+    @Test
+    void testGivenNon_WhenFindAll_ThenReturnAllRecord() {
+        // Given
+        studentRepository.saveAll(students);
+        Tuple[] expectedStudents = students.stream()
                 .map(student -> AssertionsForClassTypes.tuple(student.getRollNo(),
                         student.getFirstName(),
                         student.getLastName(),
                         student.getDateOfBirth(),
                         student.getMarks()))
                 .toArray(Tuple[]::new);
-    }
-
-    @Test
-    void testGivenNon_WhenFindAll_ThenReturnAllRecord() {
-        // Given
 
         // When
         List<Student> students = studentRepository.findAll();
@@ -81,99 +81,94 @@ class StudentRepositoryTest {
     @Test
     void testGivenId_WhenFindById_ThenReturnRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        Optional<Student> actualStudent = studentRepository.findById(expectedRahulGhadage.getId());
+        Student actualStudent = studentRepository.findById(expectedStudent.getId()).orElseGet(Student::new);
 
         // Then
-        Assertions.assertThat(actualStudent).isNotNull();
-        Assertions.assertThat(actualStudent).isNotEmpty();
-        Assertions.assertThat(actualStudent.get()).isEqualTo(expectedRahulGhadage);
+        assertStudent(expectedStudent, actualStudent);
     }
 
     @Test
     void testGivenId_WhenFindByRollNo_ThenReturnRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        Optional<Student> actualStudent = studentRepository.findByRollNo(expectedRahulGhadage.getRollNo());
+        Student actualStudent = studentRepository.findByRollNo(expectedStudent.getRollNo()).orElseGet(Student::new);
 
         // Then
-        Assertions.assertThat(actualStudent).isNotNull();
-        Assertions.assertThat(actualStudent).isNotEmpty();
-        Assertions.assertThat(actualStudent.get()).isEqualTo(expectedRahulGhadage);
+        assertStudent(expectedStudent, actualStudent);
     }
 
     @Test
     void testGivenId_WhenFindByFirstName_ThenReturnRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        Optional<Student> actualStudent = studentRepository.findByFirstName(expectedRahulGhadage.getFirstName());
+        Student actualStudent = studentRepository.findByFirstName(expectedStudent.getFirstName()).orElseGet(Student::new);
 
         // Then
-        Assertions.assertThat(actualStudent).isNotNull();
-        Assertions.assertThat(actualStudent).isNotEmpty();
-        Assertions.assertThat(actualStudent.get()).isEqualTo(expectedRahulGhadage);
+        assertStudent(expectedStudent, actualStudent);
     }
 
     @Test
     void testGivenId_WhenFindByFirstName_IgnoreCaseThenReturnRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        List<Student> actualStudents = studentRepository.findByFirstNameIgnoreCase(expectedRahulGhadage.getFirstName().toLowerCase());
+        List<Student> actualStudents = studentRepository.findByFirstNameIgnoreCase(expectedStudent.getFirstName().toLowerCase());
 
         // Then
         Assertions.assertThat(actualStudents).isNotNull();
         Assertions.assertThat(actualStudents).isNotEmpty();
         Assertions.assertThat(actualStudents.size()).isEqualTo(1);
-        Assertions.assertThat(actualStudents.get(0)).isEqualTo(expectedRahulGhadage);
+        assertStudent(expectedStudent,actualStudents.get(0));
     }
 
     @Test
     void testGivenId_WhenFindByLastName_IgnoreCaseThenReturnRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        List<Student> actualStudents = studentRepository.findByLastNameIgnoreCase(expectedRahulGhadage.getLastName().toLowerCase());
+        List<Student> actualStudents = studentRepository.findByLastNameIgnoreCase(expectedStudent.getLastName().toLowerCase());
 
         // Then
         Assertions.assertThat(actualStudents).isNotNull();
         Assertions.assertThat(actualStudents).isNotEmpty();
         Assertions.assertThat(actualStudents.size()).isEqualTo(1);
-        Assertions.assertThat(actualStudents.get(0)).isEqualTo(expectedRahulGhadage);
+        assertStudent(expectedStudent,actualStudents.get(0));
     }
 
     @Test
     void testGivenId_WhenFindByFirstNameLike_ThenReturnRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        List<Student> actualStudents = studentRepository.findByFirstNameLike("%" + expectedRahulGhadage.getFirstName().substring(1, 5) + "%");
+        List<Student> actualStudents = studentRepository.findByFirstNameLike("%" + expectedStudent.getFirstName().substring(1, 5) + "%");
 
         // Then
         Assertions.assertThat(actualStudents).isNotNull();
         Assertions.assertThat(actualStudents).isNotEmpty();
         Assertions.assertThat(actualStudents.size()).isEqualTo(1);
-        Assertions.assertThat(actualStudents.get(0)).isEqualTo(expectedRahulGhadage);
+        assertStudent(expectedStudent,actualStudents.get(0));
     }
 
     @Test
     void testGivenId_WhenFindByMarksGreaterThanEqual_ThenReturnRecord() {
         // Given
+        studentRepository.saveAll(students);
         Tuple[] expectedTupleStudents = students.stream()
                 .filter(student -> student.getMarks() >= 800.0f)
                 .map(student -> AssertionsForClassTypes.tuple(student.getRollNo(),
@@ -203,11 +198,11 @@ class StudentRepositoryTest {
     @Test
     void testGivenId_WhenExistsById_ThenReturnRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        Boolean actualStudent = studentRepository.existsById(expectedRahulGhadage.getId());
+        Boolean actualStudent = studentRepository.existsById(expectedStudent.getId());
 
         // Then
         Assertions.assertThat(actualStudent).isNotNull();
@@ -230,17 +225,18 @@ class StudentRepositoryTest {
     @Test
     void testGivenExample_WhenFindByExample_ThenReturn1Record() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student exampleStudent = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        Example<Student> studentExample = Example.of(exampleStudent, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
+        Example<Student> studentExample = Example.of(expectedStudent, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
         List<Student> actualStudents = studentRepository.findAll(studentExample);
 
         // Then
         Assertions.assertThat(actualStudents).isNotNull();
+        Assertions.assertThat(actualStudents).isNotEmpty();
         Assertions.assertThat(actualStudents.size()).isEqualTo(1);
-        Assertions.assertThat(actualStudents.get(0)).isEqualTo(exampleStudent);
+        assertStudent(expectedStudent,actualStudents.get(0));
     }
 
 
@@ -248,6 +244,7 @@ class StudentRepositoryTest {
     @MethodSource(value = "generateExample")
     void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<Student> studentExample, int count) {
         // Given
+        studentRepository.saveAll(students);
         Tuple[] expectedTupleStudents = students.stream()
                 .filter(student -> student.getDateOfBirth().equals(studentExample.getProbe().getDateOfBirth()))
                 .map(student -> AssertionsForClassTypes.tuple(student.getRollNo(),
@@ -275,29 +272,24 @@ class StudentRepositoryTest {
     @Test
     void test_saveGivenStudent_WhenSave_ThenReturnStudent() {
         // Given
-        Student salmanKhan = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
+        Student expectedStudent = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
 
         // When
-        Student student = studentRepository.save(salmanKhan);
+        Student actualStudent = studentRepository.save(expectedStudent);
 
         // Then
-        Assertions.assertThat(student).isNotNull();
-        Assertions.assertThat(student.getRollNo()).isEqualTo(salmanKhan.getRollNo());
-        Assertions.assertThat(student.getFirstName()).isEqualTo(salmanKhan.getFirstName());
-        Assertions.assertThat(student.getLastName()).isEqualTo(salmanKhan.getLastName());
-        Assertions.assertThat(student.getDateOfBirth()).isEqualTo(salmanKhan.getDateOfBirth());
-        Assertions.assertThat(student.getMarks()).isEqualTo(salmanKhan.getMarks());
+        assertStudent(expectedStudent,actualStudent);
     }
 
     @Test
     void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student expectedStudent = studentRepository.save(student);
 
         // When
-        studentRepository.deleteById(expectedRahulGhadage.getId());
-        Boolean deletedStudent = studentRepository.existsById(expectedRahulGhadage.getId());
+        studentRepository.deleteById(expectedStudent.getId());
+        Boolean deletedStudent = studentRepository.existsById(expectedStudent.getId());
 
         // Then
         Assertions.assertThat(deletedStudent).isFalse();
@@ -306,23 +298,16 @@ class StudentRepositoryTest {
     @Test
     void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
         // Given
-        Optional<Student> optionalRahulGhadage = studentRepository.findAll().stream().filter(student -> student.getFirstName().equals("Rahul") && student.getLastName().equals("Ghadage")).findFirst();
-        Student expectedRahulGhadage = optionalRahulGhadage.orElseGet(Student::new);
+        Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        Student savedStudent = studentRepository.save(student);
 
         // When
-        Optional<Student> optionalStudent = studentRepository.findById(expectedRahulGhadage.getId());
-        Student editStudent = optionalStudent.orElseGet(Student::new);
-        editStudent.setMarks(999.0f);
-        Student student = studentRepository.save(editStudent);
+        Student expectedStudent = studentRepository.findById(savedStudent.getId()).orElseGet(Student::new);
+        expectedStudent.setMarks(999.0f);
+        Student actualStudent = studentRepository.save(expectedStudent);
 
         // Then
-        Assertions.assertThat(student).isNotNull();
-        Assertions.assertThat(student.getId()).isEqualTo(editStudent.getId());
-        Assertions.assertThat(student.getRollNo()).isEqualTo(editStudent.getRollNo());
-        Assertions.assertThat(student.getFirstName()).isEqualTo(editStudent.getFirstName());
-        Assertions.assertThat(student.getLastName()).isEqualTo(editStudent.getLastName());
-        Assertions.assertThat(student.getDateOfBirth()).isEqualTo(editStudent.getDateOfBirth());
-        Assertions.assertThat(student.getMarks()).isEqualTo(editStudent.getMarks());
+        assertStudent(expectedStudent,actualStudent);
     }
 
     @Test
@@ -358,6 +343,15 @@ class StudentRepositoryTest {
         return Stream.of(
                 Arguments.of(Example.of(studentWithDateOfBirth, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 10)
         );
+    }
+
+    private void assertStudent(Student expectedStudent, Student actualStudent) {
+        Assertions.assertThat(actualStudent).isNotNull();
+        Assertions.assertThat(actualStudent.getRollNo()).isEqualTo(expectedStudent.getRollNo());
+        Assertions.assertThat(actualStudent.getFirstName()).isEqualTo(expectedStudent.getFirstName());
+        Assertions.assertThat(actualStudent.getLastName()).isEqualTo(expectedStudent.getLastName());
+        Assertions.assertThat(actualStudent.getDateOfBirth()).isEqualTo(expectedStudent.getDateOfBirth());
+        Assertions.assertThat(actualStudent.getMarks()).isEqualTo(expectedStudent.getMarks());
     }
 
 }
