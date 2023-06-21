@@ -8,7 +8,6 @@ import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -25,23 +24,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.stream.Stream;
 
-
 @DataJpaTest
 //@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
 class SuperHeroRepositoryTest {
 
     @Autowired
     private SuperHeroRepository superHeroRepository;
-
-    private static List<SuperHero> superHeroes;
-
-    @BeforeAll
-    static void initOnce() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        File file = FileLoader.getFileFromResource("superheroes.json");
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
-    }
+    public static File file = FileLoader.getFileFromResource("superheroes.json");
+    public static ObjectMapper objectMapper = new ObjectMapper();
+    public static TypeFactory typeFactory = objectMapper.getTypeFactory();
 
     @BeforeEach
     void init() {
@@ -49,8 +40,9 @@ class SuperHeroRepositoryTest {
     }
 
     @Test
-    void testGivenNon_WhenFindAll_ThenReturnAllRecord() {
+    void testGivenNon_WhenFindAll_ThenReturnAllRecord() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         superHeroRepository.saveAll(superHeroes);
         Tuple[] expectedSuperHeros = superHeroes.stream()
                 .map(superHero -> AssertionsForClassTypes.tuple(superHero.getName(),
@@ -61,12 +53,12 @@ class SuperHeroRepositoryTest {
                 .toArray(Tuple[]::new);
 
         // When
-        List<SuperHero> superHeros = superHeroRepository.findAll();
+        List<SuperHero> actualSuperHeros = superHeroRepository.findAll();
 
         // Then
-        Assertions.assertThat(superHeros).isNotNull();
-        Assertions.assertThat(superHeros.size()).isGreaterThan(0);
-        Assertions.assertThat(superHeros)
+        Assertions.assertThat(actualSuperHeros).isNotNull();
+        Assertions.assertThat(actualSuperHeros.size()).isGreaterThan(0);
+        Assertions.assertThat(actualSuperHeros)
                 .extracting(SuperHero::getName,
                         SuperHero::getSuperName,
                         SuperHero::getProfession,
@@ -76,8 +68,9 @@ class SuperHeroRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindById_ThenReturnRecord() {
+    void testGivenId_WhenFindById_ThenReturnRecord() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
         SuperHero expectedSuperHero = superHeroRepository.save(superHero);
 
@@ -89,8 +82,9 @@ class SuperHeroRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenExistsById_ThenReturnRecord() {
+    void testGivenId_WhenExistsById_ThenReturnRecord() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
         SuperHero expectedSuperHero = superHeroRepository.save(superHero);
 
@@ -116,8 +110,9 @@ class SuperHeroRepositoryTest {
     }
 
     @Test
-    void testGivenExample_WhenFindByExample_ThenReturn1Record() {
+    void testGivenExample_WhenFindByExample_ThenReturn1Record() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
         SuperHero expectedSuperHero = superHeroRepository.save(superHero);
 
@@ -135,8 +130,9 @@ class SuperHeroRepositoryTest {
 
     @ParameterizedTest
     @MethodSource(value = "generateExample")
-    void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<SuperHero> superHeroExample, int count) {
+    void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<SuperHero> superHeroExample, int count) throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         superHeroRepository.saveAll(superHeroes);
         Tuple[] expectedTupleSuperHeros = superHeroes.stream()
                 .filter(superHero -> superHero.getCanFly().equals(superHeroExample.getProbe().getCanFly()))
@@ -175,8 +171,9 @@ class SuperHeroRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
+    void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
         SuperHero expectedSuperHero = superHeroRepository.save(superHero);
 
@@ -189,8 +186,9 @@ class SuperHeroRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
+    void testGivenId_WhenEditRecord_ThenReturnEditedRecord() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
         SuperHero savedSuperHero = superHeroRepository.save(superHero);
 

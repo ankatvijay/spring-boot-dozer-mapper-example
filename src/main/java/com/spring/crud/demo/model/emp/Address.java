@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -39,11 +38,15 @@ public class Address implements Serializable {
     private String postalCode;
 
     @JsonBackReference
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "EMPLOYEE_ID", referencedColumnName = "ID", nullable = false)
+    private Employee employee;
+    /*
     @OneToOne(mappedBy = "address",
             cascade = {
                     CascadeType.MERGE,
                     CascadeType.PERSIST,
                     CascadeType.REMOVE
             })
-    private Employee employee;
+    */
 }

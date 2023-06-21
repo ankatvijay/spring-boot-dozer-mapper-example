@@ -1,13 +1,18 @@
 package com.spring.crud.demo.repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.spring.crud.demo.model.emp.Address;
 import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.model.emp.PhoneNumber;
+import com.spring.crud.demo.utils.Constant;
+import com.spring.crud.demo.utils.FileLoader;
 import com.spring.crud.demo.utils.HelperUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -18,8 +23,12 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 
+import java.io.File;
+import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @DataJpaTest
@@ -28,11 +37,21 @@ class EmployeeRepositoryTest {
 
     @Autowired
     private EmployeeRepository employeeRepository;
-    private static Tuple[] expectedEmployees = null;
+    public static File file = FileLoader.getFileFromResource("employees.json");
+    public static ObjectMapper objectMapper = new ObjectMapper();
+    public static TypeFactory typeFactory = objectMapper.getTypeFactory();
 
-    @BeforeAll
-    static void init() {
-        expectedEmployees = HelperUtil.employeeSupplier.get().stream()
+    @BeforeEach
+    void init() {
+        employeeRepository.deleteAll();
+    }
+
+    @Test
+    void testGivenNon_WhenFindAll_ThenReturnAllRecord() throws IOException {
+        // Given
+        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        employeeRepository.saveAll(employees);
+        Tuple[] expectedEmployees = employees.stream()
                 .map(employee -> AssertionsForClassTypes.tuple(employee.getFirstName(),
                         employee.getLastName(),
                         employee.getAge(),
@@ -49,19 +68,14 @@ class EmployeeRepositoryTest {
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()
                 ))
                 .toArray(Tuple[]::new);
-    }
-
-    @Test
-    void testGivenNon_WhenFindAll_ThenReturnAllRecord() {
-        // Given
 
         // When
-        List<Employee> employees = employeeRepository.findAll();
+        List<Employee> actualEmployees = employeeRepository.findAll();
 
         // Then
-        Assertions.assertThat(employees).isNotNull();
-        Assertions.assertThat(employees.size()).isGreaterThan(0);
-        Assertions.assertThat(employees)
+        Assertions.assertThat(actualEmployees).isNotNull();
+        Assertions.assertThat(actualEmployees.size()).isGreaterThan(0);
+        Assertions.assertThat(actualEmployees)
                 .extracting(Employee::getFirstName,
                         Employee::getLastName,
                         Employee::getAge,
@@ -81,28 +95,28 @@ class EmployeeRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindById_ThenReturnRecord() {
+    void testGivenId_WhenFindById_ThenReturnRecord() throws IOException {
         // Given
-        Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Employee());
+        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        Employee expectedEmployee = employeeRepository.save(employee);
 
         // When
-        Optional<Employee> actualEmployee = employeeRepository.findById(expectedRahulGhadage.getId());
+        Employee actualEmployee = employeeRepository.findById(expectedEmployee.getId()).orElseGet(Employee::new);
 
         // Then
-        Assertions.assertThat(actualEmployee).isNotNull();
-        Assertions.assertThat(actualEmployee).isNotEmpty();
-        Assertions.assertThat(actualEmployee.get()).isEqualTo(expectedRahulGhadage);
+        assertEmployee(expectedEmployee, actualEmployee);
     }
 
     @Test
-    void testGivenId_WhenExistsById_ThenReturnRecord() {
+    void testGivenId_WhenExistsById_ThenReturnRecord() throws IOException {
         // Given
-        Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee expectedRahulGhadage = optionalRahulGhadage.orElseGet(() -> new Employee());
+        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        Employee expectedEmployee = employeeRepository.save(employee);
 
         // When
-        Boolean actualEmployee = employeeRepository.existsById(expectedRahulGhadage.getId());
+        Boolean actualEmployee = employeeRepository.existsById(expectedEmployee.getId());
 
         // Then
         Assertions.assertThat(actualEmployee).isNotNull();
@@ -123,36 +137,36 @@ class EmployeeRepositoryTest {
     }
 
     @Test
-    void testGivenExample_WhenFindByExample_ThenReturn1Record() {
+    void testGivenExample_WhenFindByExample_ThenReturn1Record() throws IOException {
         // Given
-        Optional<Employee> optionalRahulGhadage = HelperUtil.employeeSupplier.get().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> new Employee());
-        exampleEmployee.setId(null);
-        exampleEmployee.setAddress(null);
+        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        Employee expectedEmployee = employeeRepository.save(employee);
+        Employee example = new Employee();
+        expectedEmployee.setFirstName("Rahul");
+        expectedEmployee.setLastName("Ghadage");
+        expectedEmployee.setNoOfChildrens(0);
+        expectedEmployee.setAge(28);
+        expectedEmployee.setSpouse(true);
 
         // When
-        Example<Employee> employeeExample = Example.of(exampleEmployee, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
+        Example<Employee> employeeExample = Example.of(example, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
         List<Employee> actualEmployees = employeeRepository.findAll(employeeExample);
 
         // Then
         Assertions.assertThat(actualEmployees).isNotNull();
+        Assertions.assertThat(actualEmployees).isNotEmpty();
         Assertions.assertThat(actualEmployees.size()).isEqualTo(1);
-        Assertions.assertThat(actualEmployees.get(0).getFirstName()).isEqualTo(exampleEmployee.getFirstName());
-        Assertions.assertThat(actualEmployees.get(0).getLastName()).isEqualTo(exampleEmployee.getLastName());
-        Assertions.assertThat(actualEmployees.get(0).getAge()).isEqualTo(exampleEmployee.getAge());
-        Assertions.assertThat(actualEmployees.get(0).getNoOfChildrens()).isEqualTo(exampleEmployee.getNoOfChildrens());
-        Assertions.assertThat(actualEmployees.get(0).getSpouse()).isEqualTo(exampleEmployee.getSpouse());
-        Assertions.assertThat(actualEmployees.get(0).getDateOfJoining()).isEqualTo(exampleEmployee.getDateOfJoining());
-        Assertions.assertThat(actualEmployees.get(0).getHobbies().toArray()).isEqualTo(exampleEmployee.getHobbies().toArray());
-        Assertions.assertThat(actualEmployees.get(0).getPhoneNumbers().stream().map(PhoneNumber::getType).toArray()).isEqualTo(exampleEmployee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray());
-        Assertions.assertThat(actualEmployees.get(0).getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()).isEqualTo(exampleEmployee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray());
+        assertEmployee(expectedEmployee, actualEmployees.get(0));
     }
 
 
     @ParameterizedTest
     @MethodSource(value = "generateExample")
-    void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<Employee> employeeExample, int count) {
+    void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<Employee> employeeExample, int count) throws IOException {
         // Given
+        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        employeeRepository.saveAll(employees);
         Tuple[] expectedTupleEmployees = HelperUtil.employeeSupplier.get().stream()
                 .filter(employee -> employee.getSpouse().equals(employeeExample.getProbe().getSpouse()))
                 .map(employee -> AssertionsForClassTypes.tuple(employee.getFirstName(),
@@ -200,63 +214,67 @@ class EmployeeRepositoryTest {
     @Test
     void test_saveGivenEmployee_WhenSave_ThenReturnEmployee() {
         // Given
-        Employee natasha = new Employee();
-        natasha.setFirstName("Natasha");
-        natasha.setLastName("Black Widow");
-        natasha.setNoOfChildrens(1);
-        natasha.setAge(35);
-        natasha.setSpouse(false);
+        PhoneNumber expectedPhoneNumber = new PhoneNumber();
+        expectedPhoneNumber.setType("Mobile");
+        expectedPhoneNumber.setNumber("1234567890");
+
+        Address expectedAddress = new Address();
+        expectedAddress.setStreetAddress("SV road");
+        expectedAddress.setCity("Mumbai");
+        expectedAddress.setState("Maharashtra");
+        expectedAddress.setCountry("India");
+        expectedAddress.setPostalCode("400001");
+
+        Employee expectedEmployee = new Employee();
+        expectedEmployee.setFirstName("Natasha");
+        expectedEmployee.setLastName("Black Widow");
+        expectedEmployee.setNoOfChildrens(1);
+        expectedEmployee.setAge(35);
+        expectedEmployee.setSpouse(false);
+        expectedEmployee.setHobbies(Arrays.asList("Running", "Fighting"));
+        expectedEmployee.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
+        expectedEmployee.setPhoneNumbers(List.of(expectedPhoneNumber));
+        expectedEmployee.setAddress(expectedAddress);
+
+        expectedAddress.setEmployee(expectedEmployee);
+        expectedPhoneNumber.setEmployee(expectedEmployee);
 
         // When
-        Employee employee = employeeRepository.save(natasha);
+        Employee actualEmployee = employeeRepository.save(expectedEmployee);
 
         // Then
-        Assertions.assertThat(employee).isNotNull();
-        Assertions.assertThat(employee.getFirstName()).isEqualTo(natasha.getFirstName());
-        Assertions.assertThat(employee.getAge()).isEqualTo(natasha.getAge());
-        Assertions.assertThat(employee.getNoOfChildrens()).isEqualTo(natasha.getNoOfChildrens());
-        Assertions.assertThat(employee.getSpouse()).isEqualTo(natasha.getSpouse());
-        Assertions.assertThat(employee.getDateOfJoining()).isEqualTo(natasha.getDateOfJoining());
-        Assertions.assertThat(employee.getHobbies()).isEqualTo(natasha.getHobbies());
-        Assertions.assertThat(employee.getPhoneNumbers()).isEqualTo(natasha.getPhoneNumbers());
+        assertEmployee(expectedEmployee, actualEmployee);
     }
 
     @Test
-    void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
+    void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
-        Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> new Employee());
+        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        Employee expectedEmployee = employeeRepository.save(employee);
 
         // When
-        employeeRepository.deleteById(exampleEmployee.getId());
-        Boolean deletedEmployee = employeeRepository.existsById(exampleEmployee.getId());
+        employeeRepository.deleteById(expectedEmployee.getId());
+        Boolean deletedEmployee = employeeRepository.existsById(expectedEmployee.getId());
 
         // Then
         Assertions.assertThat(deletedEmployee).isFalse();
     }
 
     @Test
-    void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
+    void testGivenId_WhenEditRecord_ThenReturnEditedRecord() throws IOException {
         // Given
-        Optional<Employee> optionalRahulGhadage = employeeRepository.findAll().stream().filter(employee -> employee.getFirstName().equals("Rahul") && employee.getLastName().equals("Ghadage")).findFirst();
-        Employee exampleEmployee = optionalRahulGhadage.orElseGet(() -> new Employee());
+        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        Employee savedEmployee = employeeRepository.save(employee);
 
         // When
-        Optional<Employee> optionalEmployee = employeeRepository.findById(exampleEmployee.getId());
-        Employee editEmployee = optionalEmployee.orElseGet(() -> new Employee());
-        editEmployee.setAge(18);
-        Employee employee = employeeRepository.save(editEmployee);
+        Employee expectedEmployee = employeeRepository.findById(savedEmployee.getId()).orElseGet(Employee::new);
+        expectedEmployee.setAge(18);
+        Employee actualEmployee = employeeRepository.save(expectedEmployee);
 
         // Then
-        Assertions.assertThat(employee).isNotNull();
-        Assertions.assertThat(employee.getId()).isEqualTo(editEmployee.getId());
-        Assertions.assertThat(employee.getFirstName()).isEqualTo(editEmployee.getFirstName());
-        Assertions.assertThat(employee.getAge()).isEqualTo(editEmployee.getAge());
-        Assertions.assertThat(employee.getNoOfChildrens()).isEqualTo(editEmployee.getNoOfChildrens());
-        Assertions.assertThat(employee.getSpouse()).isEqualTo(editEmployee.getSpouse());
-        Assertions.assertThat(employee.getDateOfJoining()).isEqualTo(editEmployee.getDateOfJoining());
-        Assertions.assertThat(employee.getHobbies()).isEqualTo(editEmployee.getHobbies());
-        Assertions.assertThat(employee.getPhoneNumbers()).isEqualTo(editEmployee.getPhoneNumbers());
+        assertEmployee(expectedEmployee, actualEmployee);
     }
 
     @Test
@@ -296,5 +314,23 @@ class EmployeeRepositoryTest {
                 Arguments.of(Example.of(canFlyEmployees, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 1),
                 Arguments.of(Example.of(cannotFlyEmployees, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 1)
         );
+    }
+
+    private void assertEmployee(Employee expectedEmployee, Employee actualEmployee) {
+        Assertions.assertThat(actualEmployee).isNotNull();
+        Assertions.assertThat(actualEmployee.getFirstName()).isEqualTo(expectedEmployee.getFirstName());
+        Assertions.assertThat(actualEmployee.getLastName()).isEqualTo(expectedEmployee.getLastName());
+        Assertions.assertThat(actualEmployee.getAge()).isEqualTo(expectedEmployee.getAge());
+        Assertions.assertThat(actualEmployee.getNoOfChildrens()).isEqualTo(expectedEmployee.getNoOfChildrens());
+        Assertions.assertThat(actualEmployee.getSpouse()).isEqualTo(expectedEmployee.getSpouse());
+        Assertions.assertThat(actualEmployee.getDateOfJoining()).isEqualTo(expectedEmployee.getDateOfJoining());
+        Assertions.assertThat(actualEmployee.getHobbies().toArray()).isEqualTo(expectedEmployee.getHobbies().toArray());
+        Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray()).isEqualTo(expectedEmployee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray());
+        Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()).isEqualTo(expectedEmployee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray());
+        Assertions.assertThat(actualEmployee.getAddress().getStreetAddress()).isEqualTo(expectedEmployee.getAddress().getStreetAddress());
+        Assertions.assertThat(actualEmployee.getAddress().getCity()).isEqualTo(expectedEmployee.getAddress().getCity());
+        Assertions.assertThat(actualEmployee.getAddress().getState()).isEqualTo(expectedEmployee.getAddress().getState());
+        Assertions.assertThat(actualEmployee.getAddress().getCountry()).isEqualTo(expectedEmployee.getAddress().getCountry());
+        Assertions.assertThat(actualEmployee.getAddress().getPostalCode()).isEqualTo(expectedEmployee.getAddress().getPostalCode());
     }
 }

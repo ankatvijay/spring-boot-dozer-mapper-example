@@ -52,13 +52,16 @@ public class Employee implements Serializable {
     private List<String> hobbies;
 
     @JsonManagedReference
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "employee")
+    private Address address;
+    /*
     @OneToOne(cascade = {
             CascadeType.MERGE,
             CascadeType.PERSIST,
             CascadeType.REMOVE
     })
     @JoinColumn(name = "ADDRESS_ID")
-    private Address address;
+    */
 
     @JsonManagedReference
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "employee",

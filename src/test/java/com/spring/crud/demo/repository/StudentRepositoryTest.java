@@ -9,7 +9,6 @@ import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.groups.Tuple;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,16 +33,9 @@ class StudentRepositoryTest {
 
     @Autowired
     private StudentRepository studentRepository;
-
-    private static List<Student> students;
-
-    @BeforeAll
-    static void initOnce() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        File file = FileLoader.getFileFromResource("students.json");
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
-    }
+    public static File file = FileLoader.getFileFromResource("students.json");
+    public static ObjectMapper objectMapper = new ObjectMapper();
+    public static TypeFactory typeFactory = objectMapper.getTypeFactory();
 
     @BeforeEach
     void init() {
@@ -51,8 +43,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenNon_WhenFindAll_ThenReturnAllRecord() {
+    void testGivenNon_WhenFindAll_ThenReturnAllRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         studentRepository.saveAll(students);
         Tuple[] expectedStudents = students.stream()
                 .map(student -> AssertionsForClassTypes.tuple(student.getRollNo(),
@@ -63,12 +56,12 @@ class StudentRepositoryTest {
                 .toArray(Tuple[]::new);
 
         // When
-        List<Student> students = studentRepository.findAll();
+        List<Student> actualStudents = studentRepository.findAll();
 
         // Then
-        Assertions.assertThat(students).isNotNull();
-        Assertions.assertThat(students.size()).isGreaterThan(0);
-        Assertions.assertThat(students)
+        Assertions.assertThat(actualStudents).isNotNull();
+        Assertions.assertThat(actualStudents.size()).isGreaterThan(0);
+        Assertions.assertThat(actualStudents)
                 .extracting(Student::getRollNo,
                         Student::getFirstName,
                         Student::getLastName,
@@ -78,8 +71,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindById_ThenReturnRecord() {
+    void testGivenId_WhenFindById_ThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -91,8 +85,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindByRollNo_ThenReturnRecord() {
+    void testGivenId_WhenFindByRollNo_ThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -104,8 +99,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindByFirstName_ThenReturnRecord() {
+    void testGivenId_WhenFindByFirstName_ThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -117,8 +113,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindByFirstName_IgnoreCaseThenReturnRecord() {
+    void testGivenId_WhenFindByFirstName_IgnoreCaseThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -133,8 +130,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindByLastName_IgnoreCaseThenReturnRecord() {
+    void testGivenId_WhenFindByLastName_IgnoreCaseThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -149,8 +147,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindByFirstNameLike_ThenReturnRecord() {
+    void testGivenId_WhenFindByFirstNameLike_ThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -165,8 +164,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenFindByMarksGreaterThanEqual_ThenReturnRecord() {
+    void testGivenId_WhenFindByMarksGreaterThanEqual_ThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         studentRepository.saveAll(students);
         Tuple[] expectedTupleStudents = students.stream()
                 .filter(student -> student.getMarks() >= 800.0f)
@@ -195,8 +195,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenExistsById_ThenReturnRecord() {
+    void testGivenId_WhenExistsById_ThenReturnRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -222,8 +223,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenExample_WhenFindByExample_ThenReturn1Record() {
+    void testGivenExample_WhenFindByExample_ThenReturn1Record() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -241,8 +243,9 @@ class StudentRepositoryTest {
 
     @ParameterizedTest
     @MethodSource(value = "generateExample")
-    void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<Student> studentExample, int count) {
+    void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<Student> studentExample, int count) throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         studentRepository.saveAll(students);
         Tuple[] expectedTupleStudents = students.stream()
                 .filter(student -> student.getDateOfBirth().equals(studentExample.getProbe().getDateOfBirth()))
@@ -281,8 +284,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
+    void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student expectedStudent = studentRepository.save(student);
 
@@ -295,8 +299,9 @@ class StudentRepositoryTest {
     }
 
     @Test
-    void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
+    void testGivenId_WhenEditRecord_ThenReturnEditedRecord() throws IOException {
         // Given
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         Student savedStudent = studentRepository.save(student);
 

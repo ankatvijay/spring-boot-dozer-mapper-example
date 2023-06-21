@@ -1,39 +1,24 @@
 package com.spring.crud.demo;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.spring.crud.demo.model.Student;
-import com.spring.crud.demo.model.SuperHero;
-import com.spring.crud.demo.model.emp.Employee;
-import com.spring.crud.demo.repository.EmployeeRepository;
-import com.spring.crud.demo.repository.StudentRepository;
-import com.spring.crud.demo.repository.SuperHeroRepository;
-import com.spring.crud.demo.utils.HelperUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dozer.DozerBeanMapper;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @Slf4j
 @SpringBootApplication
 @EnableJpaRepositories
 public class SpringBootH2CRUDApplication {
-	private final StudentRepository studentRepository;
+	//private final StudentRepository studentRepository;
 
-	private final SuperHeroRepository superHeroRepository;
+	//private final SuperHeroRepository superHeroRepository;
 
-	private final EmployeeRepository employeeRepository;
+	//private final EmployeeRepository employeeRepository;
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringBootH2CRUDApplication.class, args);
@@ -63,6 +48,7 @@ public class SpringBootH2CRUDApplication {
 	}
 	*/
 
+	/*
 	@Bean
 	CommandLineRunner runner() {
 		return args -> {
@@ -95,5 +81,5 @@ public class SpringBootH2CRUDApplication {
 			}
 		};
 	}
-
+	*/
 }
