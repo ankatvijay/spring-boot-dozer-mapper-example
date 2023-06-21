@@ -1,12 +1,15 @@
 package com.spring.crud.demo.repository;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.model.SuperHero;
-import com.spring.crud.demo.utils.HelperUtil;
+import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -17,8 +20,9 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 
@@ -28,22 +32,33 @@ class SuperHeroRepositoryTest {
 
     @Autowired
     private SuperHeroRepository superHeroRepository;
-    private static Tuple[] expectedSuperHeros = null;
+
+    private static List<SuperHero> superHeroes;
 
     @BeforeAll
-    static void init() {
-        expectedSuperHeros = HelperUtil.superHeroesSupplier.get().stream()
+    static void initOnce() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        File file = FileLoader.getFileFromResource("superheroes.json");
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
+    }
+
+    @BeforeEach
+    void init() {
+        superHeroRepository.deleteAll();
+    }
+
+    @Test
+    void testGivenNon_WhenFindAll_ThenReturnAllRecord() {
+        // Given
+        superHeroRepository.saveAll(superHeroes);
+        Tuple[] expectedSuperHeros = superHeroes.stream()
                 .map(superHero -> AssertionsForClassTypes.tuple(superHero.getName(),
                         superHero.getSuperName(),
                         superHero.getProfession(),
                         superHero.getAge(),
                         superHero.getCanFly()))
                 .toArray(Tuple[]::new);
-    }
-
-    @Test
-    void testGivenNon_WhenFindAll_ThenReturnAllRecord() {
-        // Given
 
         // When
         List<SuperHero> superHeros = superHeroRepository.findAll();
@@ -63,25 +78,24 @@ class SuperHeroRepositoryTest {
     @Test
     void testGivenId_WhenFindById_ThenReturnRecord() {
         // Given
-        Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
+        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
+        SuperHero expectedSuperHero = superHeroRepository.save(superHero);
+
         // When
-        Optional<SuperHero> actualSuperHero = superHeroRepository.findById(expectedSpiderMan.getId());
+        SuperHero actualSuperHero = superHeroRepository.findById(expectedSuperHero.getId()).orElseGet(SuperHero::new);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).isNotEmpty();
-        Assertions.assertThat(actualSuperHero.get()).isEqualTo(expectedSpiderMan);
+        assertSuperHero(expectedSuperHero, actualSuperHero);
     }
 
     @Test
     void testGivenId_WhenExistsById_ThenReturnRecord() {
         // Given
-        Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
+        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
+        SuperHero expectedSuperHero = superHeroRepository.save(superHero);
 
         // When
-        Boolean actualSuperHero = superHeroRepository.existsById(expectedSpiderMan.getId());
+        Boolean actualSuperHero = superHeroRepository.existsById(expectedSuperHero.getId());
 
         // Then
         Assertions.assertThat(actualSuperHero).isNotNull();
@@ -104,17 +118,18 @@ class SuperHeroRepositoryTest {
     @Test
     void testGivenExample_WhenFindByExample_ThenReturn1Record() {
         // Given
-        Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero exampleSuperHero = optionalSpiderMan.orElseGet(() -> new SuperHero());
+        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
+        SuperHero expectedSuperHero = superHeroRepository.save(superHero);
 
         // When
-        Example<SuperHero> superHeroExample = Example.of(exampleSuperHero, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
+        Example<SuperHero> superHeroExample = Example.of(expectedSuperHero, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
         List<SuperHero> actualSuperHeros = superHeroRepository.findAll(superHeroExample);
 
         // Then
         Assertions.assertThat(actualSuperHeros).isNotNull();
+        Assertions.assertThat(actualSuperHeros).isNotEmpty();
         Assertions.assertThat(actualSuperHeros.size()).isEqualTo(1);
-        Assertions.assertThat(actualSuperHeros.get(0)).isEqualTo(exampleSuperHero);
+        assertSuperHero(expectedSuperHero, actualSuperHeros.get(0));
     }
 
 
@@ -122,7 +137,8 @@ class SuperHeroRepositoryTest {
     @MethodSource(value = "generateExample")
     void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<SuperHero> superHeroExample, int count) {
         // Given
-        Tuple[] expectedTupleSuperHeros = HelperUtil.superHeroesSupplier.get().stream()
+        superHeroRepository.saveAll(superHeroes);
+        Tuple[] expectedTupleSuperHeros = superHeroes.stream()
                 .filter(superHero -> superHero.getCanFly().equals(superHeroExample.getProbe().getCanFly()))
                 .map(superHero -> AssertionsForClassTypes.tuple(superHero.getName(),
                         superHero.getSuperName(),
@@ -149,29 +165,24 @@ class SuperHeroRepositoryTest {
     @Test
     void test_saveGivenSuperHero_WhenSave_ThenReturnSuperHero() {
         // Given
-        SuperHero natasha = new SuperHero("Natasha", "Black Widow", "Agent", 35, false);
+        SuperHero expectedSuperHero = new SuperHero("Natasha", "Black Widow", "Agent", 35, false);
 
         // When
-        SuperHero superHero = superHeroRepository.save(natasha);
+        SuperHero actualSuperHero = superHeroRepository.save(expectedSuperHero);
 
         // Then
-        Assertions.assertThat(superHero).isNotNull();
-        Assertions.assertThat(superHero.getName()).isEqualTo(natasha.getName());
-        Assertions.assertThat(superHero.getSuperName()).isEqualTo(natasha.getSuperName());
-        Assertions.assertThat(superHero.getProfession()).isEqualTo(natasha.getProfession());
-        Assertions.assertThat(superHero.getAge()).isEqualTo(natasha.getAge());
-        Assertions.assertThat(superHero.getCanFly()).isEqualTo(natasha.getCanFly());
+        assertSuperHero(expectedSuperHero, actualSuperHero);
     }
 
     @Test
     void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
         // Given
-        Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
+        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
+        SuperHero expectedSuperHero = superHeroRepository.save(superHero);
 
         // When
-        superHeroRepository.deleteById(expectedSpiderMan.getId());
-        Boolean deletedSuperHero = superHeroRepository.existsById(expectedSpiderMan.getId());
+        superHeroRepository.deleteById(expectedSuperHero.getId());
+        Boolean deletedSuperHero = superHeroRepository.existsById(expectedSuperHero.getId());
 
         // Then
         Assertions.assertThat(deletedSuperHero).isFalse();
@@ -180,23 +191,16 @@ class SuperHeroRepositoryTest {
     @Test
     void testGivenId_WhenEditRecord_ThenReturnEditedRecord() {
         // Given
-        Optional<SuperHero> optionalSpiderMan = superHeroRepository.findAll().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
-        SuperHero expectedSpiderMan = optionalSpiderMan.orElseGet(() -> new SuperHero());
+        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
+        SuperHero savedSuperHero = superHeroRepository.save(superHero);
 
         // When
-        Optional<SuperHero> optionalSuperHero = superHeroRepository.findById(expectedSpiderMan.getId());
-        SuperHero editSuperHero = optionalSuperHero.orElseGet(() -> new SuperHero());
-        editSuperHero.setAge(18);
-        SuperHero superHero = superHeroRepository.save(editSuperHero);
+        SuperHero expectedSuperHero = superHeroRepository.findById(savedSuperHero.getId()).orElseGet(SuperHero::new);
+        expectedSuperHero.setAge(18);
+        SuperHero actualSuperHero = superHeroRepository.save(expectedSuperHero);
 
         // Then
-        Assertions.assertThat(superHero).isNotNull();
-        Assertions.assertThat(superHero.getId()).isEqualTo(editSuperHero.getId());
-        Assertions.assertThat(superHero.getName()).isEqualTo(editSuperHero.getName());
-        Assertions.assertThat(superHero.getSuperName()).isEqualTo(editSuperHero.getSuperName());
-        Assertions.assertThat(superHero.getProfession()).isEqualTo(editSuperHero.getProfession());
-        Assertions.assertThat(superHero.getAge()).isEqualTo(editSuperHero.getAge());
-        Assertions.assertThat(superHero.getCanFly()).isEqualTo(editSuperHero.getCanFly());
+        assertSuperHero(expectedSuperHero, actualSuperHero);
     }
 
     @Test
@@ -236,5 +240,14 @@ class SuperHeroRepositoryTest {
                 Arguments.of(Example.of(canFlySuperHeros, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 2),
                 Arguments.of(Example.of(cannotFlySuperHeros, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 3)
         );
+    }
+
+    private void assertSuperHero(SuperHero expectedSuperHero, SuperHero actualSuperHero) {
+        Assertions.assertThat(actualSuperHero).isNotNull();
+        Assertions.assertThat(actualSuperHero.getName()).isEqualTo(expectedSuperHero.getName());
+        Assertions.assertThat(actualSuperHero.getSuperName()).isEqualTo(expectedSuperHero.getSuperName());
+        Assertions.assertThat(actualSuperHero.getProfession()).isEqualTo(expectedSuperHero.getProfession());
+        Assertions.assertThat(actualSuperHero.getAge()).isEqualTo(expectedSuperHero.getAge());
+        Assertions.assertThat(actualSuperHero.getCanFly()).isEqualTo(expectedSuperHero.getCanFly());
     }
 }

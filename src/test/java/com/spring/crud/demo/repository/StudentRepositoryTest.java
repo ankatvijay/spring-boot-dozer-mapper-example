@@ -48,7 +48,6 @@ class StudentRepositoryTest {
     @BeforeEach
     void init() {
         studentRepository.deleteAll();
-
     }
 
     @Test
