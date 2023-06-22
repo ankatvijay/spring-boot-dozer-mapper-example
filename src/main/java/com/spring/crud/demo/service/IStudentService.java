@@ -23,4 +23,5 @@ public interface IStudentService {
 
 	boolean deleteStudent(int id);
 
+    void deleteAllStudent();
 }

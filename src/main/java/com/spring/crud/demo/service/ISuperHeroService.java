@@ -18,4 +18,6 @@ public interface ISuperHeroService {
     Optional<SuperHero> updateSuperHero(int id, SuperHero superHero);
 
     boolean deleteSuperHero(int id);
+
+    void deleteAllSuperHero();
 }

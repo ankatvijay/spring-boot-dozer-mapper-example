@@ -18,4 +18,6 @@ public interface IEmployeeService {
     Optional<Employee> updateEmployee(int id, Employee employee);
 
     boolean deleteEmployee(int id);
+
+    void deleteAllEmployee();
 }

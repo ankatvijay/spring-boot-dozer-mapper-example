@@ -252,6 +252,18 @@ class SuperHeroServiceTest {
         Mockito.verify(superHeroRepository).findById(id);
     }
 
+    @Test
+    void testGiveNon_WhenDeleteAllSuperHero_ThenReturnNon() {
+        // Given
+
+        // When
+        Mockito.doNothing().when(superHeroRepository).deleteAll();
+        superHeroService.deleteAllSuperHero();
+
+        // Then
+        Mockito.verify(superHeroRepository).deleteAll();
+    }
+
     private void assertSuperHero(SuperHero expectedSuperHero, SuperHero actualSuperHero) {
         Assertions.assertThat(actualSuperHero).isNotNull();
         Assertions.assertThat(actualSuperHero.getName()).isEqualTo(expectedSuperHero.getName());

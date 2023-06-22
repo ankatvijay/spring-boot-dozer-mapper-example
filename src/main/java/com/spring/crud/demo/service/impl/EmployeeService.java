@@ -75,4 +75,9 @@ public class EmployeeService implements IEmployeeService {
             return Boolean.FALSE;
         }
     }
+
+    @Override
+    public void deleteAllEmployee() {
+        employeeRepository.deleteAll();
+    }
 }

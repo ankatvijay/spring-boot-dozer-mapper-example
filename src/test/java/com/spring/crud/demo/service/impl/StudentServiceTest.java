@@ -55,17 +55,17 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenNon_WhenFindAllSuperHeros_ThenReturnAllRecord() {
+    void testGivenNon_WhenFindAllStudents_ThenReturnAllRecord() {
         // Given
 
         // When
         Mockito.when(studentRepository.findAll()).thenReturn(HelperUtil.studentSupplier.get());
-        List<Student> superHeros = studentService.findAllStudents();
+        List<Student> students = studentService.findAllStudents();
 
         // Then
-        Assertions.assertThat(superHeros).isNotNull();
-        Assertions.assertThat(superHeros.size()).isGreaterThan(0);
-        Assertions.assertThat(superHeros)
+        Assertions.assertThat(students).isNotNull();
+        Assertions.assertThat(students.size()).isGreaterThan(0);
+        Assertions.assertThat(students)
                 .extracting(Student::getRollNo,
                         Student::getFirstName,
                         Student::getLastName,
@@ -76,7 +76,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenId_WhenFindSuperHeroById_ThenReturnRecord() {
+    void testGivenId_WhenFindStudentById_ThenReturnRecord() {
         // Given
         int id = 12;
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
@@ -91,7 +91,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenId_WhenFindSuperHeroByRollNo_ThenReturnRecord() {
+    void testGivenId_WhenFindStudentByRollNo_ThenReturnRecord() {
         // Given
         int rollNo = 12;
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
@@ -106,7 +106,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenRandomId_WhenFindSuperHeroById_ThenReturnRecord() {
+    void testGivenRandomId_WhenFindStudentById_ThenReturnRecord() {
         // Given
         Integer id = RandomUtils.nextInt();
 
@@ -121,7 +121,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenStudent_WhenFindSuperHerosByExample_ThenReturnRecords() {
+    void testGivenStudent_WhenFindStudentsByExample_ThenReturnRecords() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
 
@@ -153,7 +153,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() {
+    void testGivenStudent_WhenSaveStudent_ThenReturnNewStudent() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
 
@@ -167,7 +167,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenExistingSuperHero_WhenSaveSuperHero_ThenThrowError() {
+    void testGivenExistingStudent_WhenSaveStudent_ThenThrowError() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
@@ -183,7 +183,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() {
+    void testGivenExistingStudent_WhenUpdateStudent_ThenReturnUpdatedStudent() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
@@ -200,7 +200,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenNull_WhenUpdateSuperHero_ThenThrowError() {
+    void testGivenNull_WhenUpdateStudent_ThenThrowError() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -211,7 +211,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() {
+    void testGivenStudentAndIdDifferent_WhenUpdateStudent_ThenThrowError() {
         // Given
         int id = RandomUtils.nextInt();
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
@@ -224,7 +224,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() {
+    void testGivenStudentAndId_WhenUpdateStudent_ThenThrowError() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
@@ -240,7 +240,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() {
+    void testGiveId_WhenDeleteStudent_ThenReturnTrue() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
@@ -255,7 +255,7 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGiveRandomId_WhenDeleteSuperHero_ThenReturnFalse() {
+    void testGiveRandomId_WhenDeleteStudent_ThenReturnFalse() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -266,6 +266,18 @@ class StudentServiceTest {
         // Then
         Assertions.assertThat(flag).isFalse();
         Mockito.verify(studentRepository).findById(id);
+    }
+
+    @Test
+    void testGiveNon_WhenDeleteAllStudent_ThenReturnNon() {
+        // Given
+
+        // When
+        Mockito.doNothing().when(studentRepository).deleteAll();
+        studentService.deleteAllStudent();
+
+        // Then
+        Mockito.verify(studentRepository).deleteAll();
     }
 
     private void assertStudent(Student expectedStudent, Student actualStudent) {

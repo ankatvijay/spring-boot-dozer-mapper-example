@@ -77,4 +77,9 @@ public class StudentService implements IStudentService {
         }
     }
 
+    @Override
+    public void deleteAllStudent() {
+        studentRepository.deleteAll();
+    }
+
 }

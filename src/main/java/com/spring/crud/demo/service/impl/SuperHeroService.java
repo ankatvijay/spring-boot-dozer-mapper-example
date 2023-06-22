@@ -71,4 +71,9 @@ public class SuperHeroService implements ISuperHeroService {
             return Boolean.FALSE;
         }
     }
+
+    @Override
+    public void deleteAllSuperHero() {
+        superHeroRepository.deleteAll();
+    }
 }

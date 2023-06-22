@@ -279,6 +279,18 @@ class EmployeeServiceTest {
         Mockito.verify(employeeRepository).findById(id);
     }
 
+    @Test
+    void testGiveNon_WhenDeleteAllEmployee_ThenReturnNon() {
+        // Given
+
+        // When
+        Mockito.doNothing().when(employeeRepository).deleteAll();
+        employeeService.deleteAllEmployee();
+
+        // Then
+        Mockito.verify(employeeRepository).deleteAll();
+    }
+
     private void assertEmployee(Employee expectedEmployee, Employee actualEmployee) {
         Assertions.assertThat(actualEmployee).isNotNull();
         Assertions.assertThat(actualEmployee.getFirstName()).isEqualTo(expectedEmployee.getFirstName());
