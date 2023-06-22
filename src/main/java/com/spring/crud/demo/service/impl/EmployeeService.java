@@ -1,5 +1,8 @@
 package com.spring.crud.demo.service.impl;
 
+import com.spring.crud.demo.exception.InternalServerErrorException;
+import com.spring.crud.demo.exception.NotFoundException;
+import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.repository.EmployeeRepository;
 import com.spring.crud.demo.service.IEmployeeService;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -37,13 +41,27 @@ public class EmployeeService implements IEmployeeService {
     @Transactional
     @Override
     public Optional<Employee> saveEmployee(Employee employee) {
+        if (Objects.nonNull(employee) && Objects.nonNull(employee.getId()) && employeeRepository.existsById(employee.getId())) {
+            throw new RecordFoundException("Record already found with id " + employee.getId());
+        }
         return Optional.of(employeeRepository.save(employee));
     }
 
     @Transactional
     @Override
     public Optional<Employee> updateEmployee(int id, Employee employee) {
-        return (employeeRepository.existsById(id)) ? Optional.of(employeeRepository.save(employee)) : Optional.empty();
+        if (id > 0 && Objects.nonNull(employee) && Objects.nonNull(employee.getId())) {
+            if (id == employee.getId().intValue()) {
+                if (employeeRepository.existsById(id)) {
+                    return Optional.of(employeeRepository.save(employee));
+                }
+                throw new NotFoundException("No record found with id " + id);
+            } else {
+                throw new InternalServerErrorException("Update Record id: " + id + " not equal to payload id: " + employee.getId());
+            }
+        } else {
+            throw new NullPointerException("Payload record id is null");
+        }
     }
 
     @Transactional
