@@ -100,13 +100,14 @@ class SuperHeroServiceTest {
 
         // Then
         Assertions.assertThat(actualSuperHero).isNotNull();
+        Assertions.assertThat(actualSuperHero).hasAllNullFieldsOrProperties();
         Mockito.verify(superHeroRepository).findById(id);
     }
 
     @Test
     void testGivenSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
         // Given
-        SuperHero expectedSuperHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
 
         // When
         Mockito.when(superHeroRepository.findAll((Example) Mockito.any())).thenReturn(List.of(expectedSuperHero));
@@ -116,18 +117,18 @@ class SuperHeroServiceTest {
         Assertions.assertThat(actualSuperHeros).isNotNull();
         Assertions.assertThat(actualSuperHeros).isNotEmpty();
         Assertions.assertThat(actualSuperHeros.size()).isEqualTo(1);
-        assertSuperHero(expectedSuperHero, actualSuperHeros.get(0));
+        assertSuperHero(actualSuperHeros.get(0), expectedSuperHero);
     }
 
     @Test
     void testGivenRandomSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
         // Given
-        SuperHero superHero = new SuperHero("Bruce Wayne","Batman","Business man",35,true);
+        SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
         List<SuperHero> superHeroes = new ArrayList<>();
 
         // When
         Mockito.when(superHeroRepository.findAll((Example) Mockito.any())).thenReturn(superHeroes);
-        List<SuperHero> actualSuperHeros = superHeroService.findSuperHerosByExample(superHero);
+        List<SuperHero> actualSuperHeros = superHeroService.findSuperHerosByExample(expectedSuperHero);
 
         // Then
         Assertions.assertThat(actualSuperHeros).isNotNull();
@@ -138,61 +139,48 @@ class SuperHeroServiceTest {
     @Test
     void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() {
         // Given
-        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
 
         // When
-        Mockito.when(superHeroRepository.save(superHero)).thenReturn(superHero);
-        Optional<SuperHero> actualSuperHero = superHeroService.saveSuperHero(superHero);
+        Mockito.when(superHeroRepository.save(expectedSuperHero)).thenReturn(expectedSuperHero);
+        SuperHero actualSuperHero = superHeroService.saveSuperHero(expectedSuperHero).orElseGet(SuperHero::new);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).isNotEmpty();
-        Assertions.assertThat(actualSuperHero.get().getName()).isEqualTo("Wade");
-        Assertions.assertThat(actualSuperHero.get().getSuperName()).isEqualTo("Deadpool");
-        Assertions.assertThat(actualSuperHero.get().getProfession()).isEqualTo("Street fighter");
-        Assertions.assertThat(actualSuperHero.get().getAge()).isEqualTo(28);
-        Assertions.assertThat(actualSuperHero.get().getCanFly()).isFalse();
-        Mockito.verify(superHeroRepository).save(superHero);
+        assertSuperHero(expectedSuperHero, actualSuperHero);
+        Mockito.verify(superHeroRepository).save(expectedSuperHero);
     }
 
     @Test
     void testGivenExistingSuperHero_WhenSaveSuperHero_ThenThrowError() {
         // Given
-        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
-        superHero.setId(15);
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
+        expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroRepository.existsById(superHero.getId())).thenReturn(true);
-        Assertions.assertThatThrownBy(() -> superHeroService.saveSuperHero(superHero))
+        Mockito.when(superHeroRepository.existsById(expectedSuperHero.getId())).thenReturn(true);
+        Assertions.assertThatThrownBy(() -> superHeroService.saveSuperHero(expectedSuperHero))
                 .isInstanceOf(RecordFoundException.class)
-                .hasMessage("Record already found with id " + superHero.getId());
+                .hasMessage("Record already found with id " + expectedSuperHero.getId());
 
         // Then
-        Mockito.verify(superHeroRepository).existsById(superHero.getId());
+        Mockito.verify(superHeroRepository).existsById(expectedSuperHero.getId());
     }
 
     @Test
     void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() {
         // Given
-        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
-        superHero.setId(15);
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
+        expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroRepository.existsById(superHero.getId())).thenReturn(true);
-        Mockito.when(superHeroRepository.save(superHero)).thenReturn(superHero);
-        Optional<SuperHero> actualSuperHero = superHeroService.updateSuperHero(superHero.getId(), superHero);
+        Mockito.when(superHeroRepository.existsById(expectedSuperHero.getId())).thenReturn(true);
+        Mockito.when(superHeroRepository.save(expectedSuperHero)).thenReturn(expectedSuperHero);
+        SuperHero actualSuperHero = superHeroService.updateSuperHero(expectedSuperHero.getId(), expectedSuperHero).orElseGet(SuperHero::new);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).isNotEmpty();
-        Assertions.assertThat(actualSuperHero.get().getId()).isEqualTo(15);
-        Assertions.assertThat(actualSuperHero.get().getName()).isEqualTo("Wade");
-        Assertions.assertThat(actualSuperHero.get().getSuperName()).isEqualTo("Deadpool");
-        Assertions.assertThat(actualSuperHero.get().getProfession()).isEqualTo("Street fighter");
-        Assertions.assertThat(actualSuperHero.get().getAge()).isEqualTo(28);
-        Assertions.assertThat(actualSuperHero.get().getCanFly()).isFalse();
-        Mockito.verify(superHeroRepository).existsById(superHero.getId());
-        Mockito.verify(superHeroRepository).save(superHero);
+        assertSuperHero(expectedSuperHero, actualSuperHero);
+        Mockito.verify(superHeroRepository).existsById(expectedSuperHero.getId());
+        Mockito.verify(superHeroRepository).save(expectedSuperHero);
     }
 
     @Test
@@ -210,44 +198,44 @@ class SuperHeroServiceTest {
     void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() {
         // Given
         int id = RandomUtils.nextInt();
-        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
-        superHero.setId(15);
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
+        expectedSuperHero.setId(15);
 
         // When & Then
-        Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(id, superHero))
+        Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(id, expectedSuperHero))
                 .isInstanceOf(InternalServerErrorException.class)
-                .hasMessage("Update Record id: " + id + " not equal to payload id: " + superHero.getId());
+                .hasMessage("Update Record id: " + id + " not equal to payload id: " + expectedSuperHero.getId());
     }
 
     @Test
     void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() {
         // Given
-        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
-        superHero.setId(15);
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
+        expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroRepository.existsById(superHero.getId())).thenReturn(false);
+        Mockito.when(superHeroRepository.existsById(expectedSuperHero.getId())).thenReturn(false);
 
         // Then
-        Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(superHero.getId(), superHero))
+        Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(expectedSuperHero.getId(), expectedSuperHero))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("No record found with id " + superHero.getId());
-        Mockito.verify(superHeroRepository).existsById(superHero.getId());
+                .hasMessage("No record found with id " + expectedSuperHero.getId());
+        Mockito.verify(superHeroRepository).existsById(expectedSuperHero.getId());
     }
 
     @Test
     void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() {
         // Given
-        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
-        superHero.setId(15);
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
+        expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroRepository.findById(superHero.getId())).thenReturn(Optional.of(superHero));
-        Boolean flag = superHeroService.deleteSuperHero(superHero.getId());
+        Mockito.when(superHeroRepository.findById(expectedSuperHero.getId())).thenReturn(Optional.of(expectedSuperHero));
+        Boolean flag = superHeroService.deleteSuperHero(expectedSuperHero.getId());
 
         // Then
         Assertions.assertThat(flag).isTrue();
-        Mockito.verify(superHeroRepository).findById(superHero.getId());
+        Mockito.verify(superHeroRepository).findById(expectedSuperHero.getId());
     }
 
     @Test
