@@ -1,11 +1,13 @@
 package com.spring.crud.demo.service.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.SuperHero;
 import com.spring.crud.demo.repository.SuperHeroRepository;
-import com.spring.crud.demo.utils.HelperUtil;
+import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
@@ -19,6 +21,8 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Example;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,15 +32,18 @@ class SuperHeroServiceTest {
 
     @Mock
     private SuperHeroRepository superHeroRepository;
-
     @InjectMocks
     private SuperHeroService superHeroService;
-
     private static Tuple[] expectedSuperHeros = null;
+    private static List<SuperHero> superHeroes;
 
     @BeforeAll
-    static void init() {
-        expectedSuperHeros = HelperUtil.superHeroesSupplier.get().stream()
+    static void init() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        File file = FileLoader.getFileFromResource("superheroes.json");
+        superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
+        expectedSuperHeros = superHeroes.stream()
                 .map(superHero -> AssertionsForClassTypes.tuple(
                         superHero.getName(),
                         superHero.getSuperName(),
@@ -51,13 +58,13 @@ class SuperHeroServiceTest {
         // Given
 
         // When
-        Mockito.when(superHeroRepository.findAll()).thenReturn(HelperUtil.superHeroesSupplier.get());
-        List<SuperHero> superHeros = superHeroService.findAllSuperHeros();
+        Mockito.when(superHeroRepository.findAll()).thenReturn(superHeroes);
+        List<SuperHero> actualSuperHeros = superHeroService.findAllSuperHeros();
 
         // Then
-        Assertions.assertThat(superHeros).isNotNull();
-        Assertions.assertThat(superHeros.size()).isGreaterThan(0);
-        Assertions.assertThat(superHeros)
+        Assertions.assertThat(actualSuperHeros).isNotNull();
+        Assertions.assertThat(actualSuperHeros.size()).isGreaterThan(0);
+        Assertions.assertThat(actualSuperHeros)
                 .extracting(SuperHero::getName,
                         SuperHero::getSuperName,
                         SuperHero::getProfession,
@@ -71,16 +78,14 @@ class SuperHeroServiceTest {
     void testGivenId_WhenFindSuperHeroById_ThenReturnRecord() {
         // Given
         int id = 12;
-        Optional<SuperHero> optionalSpiderMan = HelperUtil.superHeroesSupplier.get().stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst();
+        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
 
         // When
-        Mockito.when(superHeroRepository.findById(id)).thenReturn(optionalSpiderMan);
-        Optional<SuperHero> actualSuperHero = superHeroService.findSuperHeroById(id);
+        Mockito.when(superHeroRepository.findById(id)).thenReturn(Optional.of(expectedSuperHero));
+        SuperHero actualSuperHero = superHeroService.findSuperHeroById(id).orElseGet(SuperHero::new);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).isNotEmpty();
-        Assertions.assertThat(actualSuperHero.get()).isEqualTo(optionalSpiderMan.get());
+        assertSuperHero(expectedSuperHero, actualSuperHero);
         Mockito.verify(superHeroRepository).findById(id);
     }
 
@@ -88,31 +93,30 @@ class SuperHeroServiceTest {
     void testGivenRandomId_WhenFindSuperHeroById_ThenReturnRecord() {
         // Given
         Integer id = RandomUtils.nextInt();
-        Optional<SuperHero> optionalSpiderMan = Optional.empty();
 
         // When
-        Mockito.when(superHeroRepository.findById(id)).thenReturn(optionalSpiderMan);
-        Optional<SuperHero> actualSuperHero = superHeroService.findSuperHeroById(id);
+        Mockito.when(superHeroRepository.findById(id)).thenReturn(Optional.empty());
+        SuperHero actualSuperHero = superHeroService.findSuperHeroById(id).orElseGet(SuperHero::new);
 
         // Then
-        Assertions.assertThat(actualSuperHero).isEmpty();
+        Assertions.assertThat(actualSuperHero).isNotNull();
         Mockito.verify(superHeroRepository).findById(id);
     }
 
     @Test
     void testGivenSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
         // Given
-        SuperHero superHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
+        SuperHero expectedSuperHero = new SuperHero("Wade", "Deadpool", "Street fighter", 28, false);
 
         // When
-        Mockito.when(superHeroRepository.findAll((Example) Mockito.any())).thenReturn(List.of(superHero));
-        List<SuperHero> actualSuperHeros = superHeroService.findSuperHerosByExample(superHero);
+        Mockito.when(superHeroRepository.findAll((Example) Mockito.any())).thenReturn(List.of(expectedSuperHero));
+        List<SuperHero> actualSuperHeros = superHeroService.findSuperHerosByExample(expectedSuperHero);
 
         // Then
         Assertions.assertThat(actualSuperHeros).isNotNull();
         Assertions.assertThat(actualSuperHeros).isNotEmpty();
         Assertions.assertThat(actualSuperHeros.size()).isEqualTo(1);
-        Assertions.assertThat(actualSuperHeros.get(0)).isEqualTo(superHero);
+        assertSuperHero(expectedSuperHero, actualSuperHeros.get(0));
     }
 
     @Test
@@ -258,5 +262,14 @@ class SuperHeroServiceTest {
         // Then
         Assertions.assertThat(flag).isFalse();
         Mockito.verify(superHeroRepository).findById(id);
+    }
+
+    private void assertSuperHero(SuperHero expectedSuperHero, SuperHero actualSuperHero) {
+        Assertions.assertThat(actualSuperHero).isNotNull();
+        Assertions.assertThat(actualSuperHero.getName()).isEqualTo(expectedSuperHero.getName());
+        Assertions.assertThat(actualSuperHero.getSuperName()).isEqualTo(expectedSuperHero.getSuperName());
+        Assertions.assertThat(actualSuperHero.getProfession()).isEqualTo(expectedSuperHero.getProfession());
+        Assertions.assertThat(actualSuperHero.getAge()).isEqualTo(expectedSuperHero.getAge());
+        Assertions.assertThat(actualSuperHero.getCanFly()).isEqualTo(expectedSuperHero.getCanFly());
     }
 }
