@@ -28,7 +28,16 @@ public class SuperHeroService implements ISuperHeroService {
 
     @Override
     public Optional<SuperHero> findSuperHeroById(int id) {
-        return superHeroRepository.findById(id);
+        Optional<SuperHero> optionalSuperHero = superHeroRepository.findById(id);
+        if (optionalSuperHero.isEmpty()) {
+            throw new NotFoundException("No record found with id " + id);
+        }
+        return optionalSuperHero;
+    }
+
+    @Override
+    public boolean existsBySuperHeroId(int id) {
+        return superHeroRepository.existsById(id);
     }
 
     @Override
@@ -63,9 +72,8 @@ public class SuperHeroService implements ISuperHeroService {
 
     @Override
     public boolean deleteSuperHero(int id) {
-        Optional<SuperHero> optionalSuperHero = findSuperHeroById(id);
-        if (optionalSuperHero.isPresent()) {
-            superHeroRepository.delete(optionalSuperHero.get());
+        if (existsBySuperHeroId(id)) {
+            superHeroRepository.deleteById(id);
             return Boolean.TRUE;
         } else {
             return Boolean.FALSE;

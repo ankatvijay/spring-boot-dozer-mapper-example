@@ -11,6 +11,8 @@ public interface IEmployeeService {
 
     Optional<Employee> findEmployeeById(int id);
 
+    boolean existsByEmployeeId(int id);
+
     List<Employee> findEmployeesByExample(Employee employee);
 
     Optional<Employee> saveEmployee(Employee employee);

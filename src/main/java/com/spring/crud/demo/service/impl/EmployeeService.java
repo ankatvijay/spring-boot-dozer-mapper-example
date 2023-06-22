@@ -29,7 +29,16 @@ public class EmployeeService implements IEmployeeService {
 
     @Override
     public Optional<Employee> findEmployeeById(int id) {
-        return employeeRepository.findById(id);
+        Optional<Employee> optionalEmployee = employeeRepository.findById(id);
+        if (optionalEmployee.isEmpty()) {
+            throw new NotFoundException("No record found with id " + id);
+        }
+        return optionalEmployee;
+    }
+
+    @Override
+    public boolean existsByEmployeeId(int id) {
+        return employeeRepository.existsById(id);
     }
 
     @Override
@@ -67,9 +76,8 @@ public class EmployeeService implements IEmployeeService {
     @Transactional
     @Override
     public boolean deleteEmployee(int id) {
-        Optional<Employee> optionalEmployee = findEmployeeById(id);
-        if (optionalEmployee.isPresent()) {
-            employeeRepository.delete(optionalEmployee.get());
+        if (existsByEmployeeId(id)) {
+            employeeRepository.deleteById(id);
             return Boolean.TRUE;
         } else {
             return Boolean.FALSE;

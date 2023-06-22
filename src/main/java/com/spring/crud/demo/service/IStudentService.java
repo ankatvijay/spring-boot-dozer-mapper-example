@@ -15,6 +15,8 @@ public interface IStudentService {
 
 	Optional<Student> findStudentByRollNo(int rollNo);
 
+	boolean existsByStudentId(int id);
+
 	List<Student> findStudentsByExample(Student student);
 
 	Optional<Student> saveStudent(Student student);

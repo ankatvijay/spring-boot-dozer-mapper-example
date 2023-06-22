@@ -11,6 +11,8 @@ public interface ISuperHeroService {
 
     Optional<SuperHero> findSuperHeroById(int id);
 
+    boolean existsBySuperHeroId(int id);
+
     List<SuperHero> findSuperHerosByExample(SuperHero superHero);
 
     Optional<SuperHero> saveSuperHero(SuperHero superHero);

@@ -4,6 +4,7 @@ import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.Student;
+import com.spring.crud.demo.model.SuperHero;
 import com.spring.crud.demo.repository.StudentRepository;
 import com.spring.crud.demo.service.IStudentService;
 import lombok.RequiredArgsConstructor;
@@ -28,12 +29,25 @@ public class StudentService implements IStudentService {
 
     @Override
     public Optional<Student> findStudentById(int id) {
-        return studentRepository.findById(id);
+        Optional<Student> optionalStudent = studentRepository.findById(id);
+        if (optionalStudent.isEmpty()) {
+            throw new NotFoundException("No record found with id " + id);
+        }
+        return optionalStudent;
     }
 
     @Override
     public Optional<Student> findStudentByRollNo(int rollNo) {
-        return studentRepository.findByRollNo(rollNo);
+        Optional<Student> optionalStudent = studentRepository.findByRollNo(rollNo);
+        if (optionalStudent.isEmpty()) {
+            throw new NotFoundException("No record found with rollNo " + rollNo);
+        }
+        return optionalStudent;
+    }
+
+    @Override
+    public boolean existsByStudentId(int id) {
+        return studentRepository.existsById(id);
     }
 
     @Override
@@ -68,9 +82,8 @@ public class StudentService implements IStudentService {
 
     @Override
     public boolean deleteStudent(int id) {
-        Optional<Student> optionalStudent = findStudentById(id);
-        if (optionalStudent.isPresent()) {
-            studentRepository.delete(optionalStudent.get());
+        if (existsByStudentId(id)) {
+            studentRepository.deleteById(id);
             return Boolean.TRUE;
         } else {
             return Boolean.FALSE;

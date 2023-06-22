@@ -110,14 +110,12 @@ class StudentServiceTest {
         // Given
         Integer id = RandomUtils.nextInt();
 
-        // When
+        // When & Then
         Mockito.when(studentRepository.findById(id)).thenReturn(Optional.empty());
-        Student actualStudent = studentService.findStudentById(id).orElseGet(Student::new);
+        Assertions.assertThatThrownBy(() -> studentService.findStudentById(id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with id " + id);
 
-        // Then
-        Assertions.assertThat(actualStudent).isNotNull();
-        Assertions.assertThat(actualStudent).hasAllNullFieldsOrProperties();
-        Mockito.verify(studentRepository).findById(id);
     }
 
     @Test
@@ -246,12 +244,12 @@ class StudentServiceTest {
         expectedStudent.setId(25);
 
         // When
-        Mockito.when(studentRepository.findById(expectedStudent.getId())).thenReturn(Optional.of(expectedStudent));
+        Mockito.when(studentRepository.existsById(expectedStudent.getId())).thenReturn(true);
         Boolean flag = studentService.deleteStudent(expectedStudent.getId());
 
         // Then
         Assertions.assertThat(flag).isTrue();
-        Mockito.verify(studentRepository).findById(expectedStudent.getId());
+        Mockito.verify(studentRepository).existsById(expectedStudent.getId());
     }
 
     @Test
@@ -260,12 +258,12 @@ class StudentServiceTest {
         int id = RandomUtils.nextInt();
 
         // When
-        Mockito.when(studentRepository.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(studentRepository.existsById(id)).thenReturn(false);
         Boolean flag = studentService.deleteStudent(id);
 
         // Then
         Assertions.assertThat(flag).isFalse();
-        Mockito.verify(studentRepository).findById(id);
+        Mockito.verify(studentRepository).existsById(id);
     }
 
     @Test
