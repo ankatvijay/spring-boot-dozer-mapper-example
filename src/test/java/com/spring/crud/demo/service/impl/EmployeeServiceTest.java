@@ -113,16 +113,13 @@ class EmployeeServiceTest {
     @Test
     void testGivenRandomId_WhenFindEmployeeById_ThenReturnRecord() {
         // Given
-        Integer id = RandomUtils.nextInt();
+        int id = RandomUtils.nextInt();
 
-        // When
+        // When & Then
         Mockito.when(employeeRepository.findById(id)).thenReturn(Optional.empty());
-        Employee actualEmployee = employeeService.findEmployeeById(id).orElseGet(Employee::new);
-
-        // Then
-        Assertions.assertThat(actualEmployee).isNotNull();
-        Assertions.assertThat(actualEmployee).hasAllNullFieldsOrProperties();
-        Mockito.verify(employeeRepository).findById(id);
+        Assertions.assertThatThrownBy(() -> employeeService.findEmployeeById(id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with id " + id);
     }
 
     @Test
@@ -257,12 +254,12 @@ class EmployeeServiceTest {
         expectedEmployee.setId(15);
 
         // When
-        Mockito.when(employeeRepository.findById(expectedEmployee.getId())).thenReturn(Optional.of(expectedEmployee));
+        Mockito.when(employeeRepository.existsById(expectedEmployee.getId())).thenReturn(true);
         Boolean flag = employeeService.deleteEmployee(expectedEmployee.getId());
 
         // Then
         Assertions.assertThat(flag).isTrue();
-        Mockito.verify(employeeRepository).findById(expectedEmployee.getId());
+        Mockito.verify(employeeRepository).existsById(expectedEmployee.getId());
     }
 
     @Test
@@ -271,12 +268,12 @@ class EmployeeServiceTest {
         int id = RandomUtils.nextInt();
 
         // When
-        Mockito.when(employeeRepository.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(employeeRepository.existsById(id)).thenReturn(false);
         Boolean flag = employeeService.deleteEmployee(id);
 
         // Then
         Assertions.assertThat(flag).isFalse();
-        Mockito.verify(employeeRepository).findById(id);
+        Mockito.verify(employeeRepository).existsById(id);
     }
 
     @Test

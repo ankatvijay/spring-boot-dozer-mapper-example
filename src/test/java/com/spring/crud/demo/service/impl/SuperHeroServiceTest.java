@@ -92,16 +92,13 @@ class SuperHeroServiceTest {
     @Test
     void testGivenRandomId_WhenFindSuperHeroById_ThenReturnRecord() {
         // Given
-        Integer id = RandomUtils.nextInt();
+        int id = RandomUtils.nextInt();
 
-        // When
+        // When & Then
         Mockito.when(superHeroRepository.findById(id)).thenReturn(Optional.empty());
-        SuperHero actualSuperHero = superHeroService.findSuperHeroById(id).orElseGet(SuperHero::new);
-
-        // Then
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero).hasAllNullFieldsOrProperties();
-        Mockito.verify(superHeroRepository).findById(id);
+        Assertions.assertThatThrownBy(() -> superHeroService.findSuperHeroById(id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with id " + id);
     }
 
     @Test
@@ -230,12 +227,12 @@ class SuperHeroServiceTest {
         expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroRepository.findById(expectedSuperHero.getId())).thenReturn(Optional.of(expectedSuperHero));
+        Mockito.when(superHeroRepository.existsById(expectedSuperHero.getId())).thenReturn(true);
         Boolean flag = superHeroService.deleteSuperHero(expectedSuperHero.getId());
 
         // Then
         Assertions.assertThat(flag).isTrue();
-        Mockito.verify(superHeroRepository).findById(expectedSuperHero.getId());
+        Mockito.verify(superHeroRepository).existsById(expectedSuperHero.getId());
     }
 
     @Test
@@ -244,12 +241,12 @@ class SuperHeroServiceTest {
         int id = RandomUtils.nextInt();
 
         // When
-        Mockito.when(superHeroRepository.findById(id)).thenReturn(Optional.empty());
+        Mockito.when(superHeroRepository.existsById(id)).thenReturn(false);
         Boolean flag = superHeroService.deleteSuperHero(id);
 
         // Then
         Assertions.assertThat(flag).isFalse();
-        Mockito.verify(superHeroRepository).findById(id);
+        Mockito.verify(superHeroRepository).existsById(id);
     }
 
     @Test

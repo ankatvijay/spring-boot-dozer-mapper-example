@@ -15,16 +15,12 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.domain.Example;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @SpringBootTest(value = "SuperHeroServiceTestIT")
 class SuperHeroServiceTestIT {
@@ -91,7 +87,7 @@ class SuperHeroServiceTestIT {
     @Test
     void testGivenRandomId_WhenFindSuperHeroById_ThenThrowError() {
         // Given
-        Integer id = RandomUtils.nextInt();
+        int id = RandomUtils.nextInt();
 
         // When
         Assertions.assertThatThrownBy(() -> superHeroService.findSuperHeroById(id))
@@ -242,13 +238,5 @@ class SuperHeroServiceTestIT {
         Assertions.assertThat(actualSuperHero.getProfession()).isEqualTo(expectedSuperHero.getProfession());
         Assertions.assertThat(actualSuperHero.getAge()).isEqualTo(expectedSuperHero.getAge());
         Assertions.assertThat(actualSuperHero.getCanFly()).isEqualTo(expectedSuperHero.getCanFly());
-    }
-
-    @Test
-    void findAllSuperHeros() {
-        List<SuperHero> superHeroes =  superHeroService.findAllSuperHeros();
-        Assertions.assertThat(superHeroes).isNotNull();
-        Assertions.assertThat(superHeroes).isNotEmpty();
-
     }
 }
