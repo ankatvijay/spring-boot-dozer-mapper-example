@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.spring.crud.demo.jakson.LocalDateTimeDeserializer;
 import com.spring.crud.demo.jakson.LocalDateTimeSerializer;
 import lombok.*;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
 import javax.persistence.*;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -46,7 +48,7 @@ public class Employee implements Serializable {
     @Column(name = "DATE_OF_JOINING")
     private LocalDateTime dateOfJoining;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "HOBBIES", joinColumns = @JoinColumn(name = "ID"))
     @Column(name = "HOBBY")
     private List<String> hobbies;
@@ -54,23 +56,10 @@ public class Employee implements Serializable {
     @JsonManagedReference
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "employee")
     private Address address;
-    /*
-    @OneToOne(cascade = {
-            CascadeType.MERGE,
-            CascadeType.PERSIST,
-            CascadeType.REMOVE
-    })
-    @JoinColumn(name = "ADDRESS_ID")
-    */
 
     @JsonManagedReference
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "employee",
-            orphanRemoval = true,
-            cascade = {
-                    CascadeType.MERGE,
-                    CascadeType.PERSIST,
-                    CascadeType.REMOVE
-            })
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "employee")
     private List<PhoneNumber> phoneNumbers;
 
 

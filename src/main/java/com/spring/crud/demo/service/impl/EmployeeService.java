@@ -60,7 +60,7 @@ public class EmployeeService implements IEmployeeService {
     @Override
     public Optional<Employee> updateEmployee(int id, Employee employee) {
         if (id > 0 && Objects.nonNull(employee) && Objects.nonNull(employee.getId())) {
-            if (id == employee.getId().intValue()) {
+            if (id == employee.getId()) {
                 if (employeeRepository.existsById(id)) {
                     return Optional.of(employeeRepository.save(employee));
                 }
