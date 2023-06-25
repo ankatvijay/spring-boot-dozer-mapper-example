@@ -115,7 +115,7 @@ class StudentServiceTest {
         Assertions.assertThatThrownBy(() -> studentService.findStudentById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
-
+        Mockito.verify(studentRepository).findById(id);
     }
 
     @Test
@@ -128,7 +128,7 @@ class StudentServiceTest {
         Assertions.assertThatThrownBy(() -> studentService.findStudentByRollNo(rollNo))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with rollNo " + rollNo);
-
+        Mockito.verify(studentRepository).findByRollNo(rollNo);
     }
 
     @Test
@@ -145,6 +145,7 @@ class StudentServiceTest {
         Assertions.assertThat(actualStudents).isNotEmpty();
         Assertions.assertThat(actualStudents.size()).isEqualTo(1);
         Assertions.assertThat(actualStudents.get(0)).isEqualTo(expectedStudent);
+        Mockito.verify(studentRepository).findAll((Example) Mockito.any());
     }
 
     @Test
@@ -161,6 +162,7 @@ class StudentServiceTest {
         Assertions.assertThat(actualStudents).isNotNull();
         Assertions.assertThat(actualStudents).isEmpty();
         Assertions.assertThat(actualStudents.size()).isEqualTo(0);
+        Mockito.verify(studentRepository).findAll((Example) Mockito.any());
     }
 
     @Test

@@ -120,6 +120,7 @@ class EmployeeServiceTest {
         Assertions.assertThatThrownBy(() -> employeeService.findEmployeeById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
+        Mockito.verify(employeeRepository).findById(id);
     }
 
     @Test
@@ -136,6 +137,7 @@ class EmployeeServiceTest {
         Assertions.assertThat(actualEmployees).isNotEmpty();
         Assertions.assertThat(actualEmployees.size()).isEqualTo(1);
         assertEmployee(actualEmployees.get(0), expectedEmployee);
+        Mockito.verify(employeeRepository).findAll((Example) Mockito.any());
     }
 
     @Test
@@ -158,6 +160,7 @@ class EmployeeServiceTest {
         Assertions.assertThat(actualEmployees).isNotNull();
         Assertions.assertThat(actualEmployees).isEmpty();
         Assertions.assertThat(actualEmployees.size()).isEqualTo(0);
+        Mockito.verify(employeeRepository).findAll((Example) Mockito.any());
     }
 
     @Test

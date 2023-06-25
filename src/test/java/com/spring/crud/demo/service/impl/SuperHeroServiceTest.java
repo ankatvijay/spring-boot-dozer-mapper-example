@@ -99,6 +99,7 @@ class SuperHeroServiceTest {
         Assertions.assertThatThrownBy(() -> superHeroService.findSuperHeroById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
+        Mockito.verify(superHeroRepository).findById(id);
     }
 
     @Test
@@ -115,6 +116,7 @@ class SuperHeroServiceTest {
         Assertions.assertThat(actualSuperHeros).isNotEmpty();
         Assertions.assertThat(actualSuperHeros.size()).isEqualTo(1);
         assertSuperHero(actualSuperHeros.get(0), expectedSuperHero);
+        Mockito.verify(superHeroRepository).findAll((Example) Mockito.any());
     }
 
     @Test
@@ -131,6 +133,7 @@ class SuperHeroServiceTest {
         Assertions.assertThat(actualSuperHeros).isNotNull();
         Assertions.assertThat(actualSuperHeros).isEmpty();
         Assertions.assertThat(actualSuperHeros.size()).isEqualTo(0);
+        Mockito.verify(superHeroRepository).findAll((Example) Mockito.any());
     }
 
     @Test
