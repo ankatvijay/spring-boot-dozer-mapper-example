@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "SUPER_HERO")
+@Table(name = "SUPER_HERO", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class SuperHero implements Serializable {
 
     @Id

@@ -108,13 +108,26 @@ class StudentServiceTest {
     @Test
     void testGivenRandomId_WhenFindStudentById_ThenReturnRecord() {
         // Given
-        Integer id = RandomUtils.nextInt();
+        int id = RandomUtils.nextInt();
 
         // When & Then
         Mockito.when(studentRepository.findById(id)).thenReturn(Optional.empty());
         Assertions.assertThatThrownBy(() -> studentService.findStudentById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
+
+    }
+
+    @Test
+    void testGivenRandomId_WhenFindStudentByRollNo_ThenReturnRecord() {
+        // Given
+        int rollNo = RandomUtils.nextInt();
+
+        // When & Then
+        Mockito.when(studentRepository.findByRollNo(rollNo)).thenReturn(Optional.empty());
+        Assertions.assertThatThrownBy(() -> studentService.findStudentByRollNo(rollNo))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with rollNo " + rollNo);
 
     }
 

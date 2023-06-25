@@ -135,10 +135,10 @@ class EmployeeServiceTestIT {
         employeeExample.setSpouse(true);
         employeeExample.setAddress(null);
         employeeExample.setPhoneNumbers(null);
-        //employeeExample.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
+        employeeExample.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
 
         // When
-        List<Employee> actualEmployees = employeeService.findEmployeesByExample(expectedEmployee);
+        List<Employee> actualEmployees = employeeService.findEmployeesByExample(employeeExample);
 
         // Then
         Assertions.assertThat(actualEmployees).isNotNull();

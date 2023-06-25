@@ -16,36 +16,36 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "STUDENT")
+@Table(name = "STUDENT", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class Student implements Serializable {
 
-	@Id
-	@GeneratedValue
-	@Column(name = "ID")
-	private Integer id;
+    @Id
+    @GeneratedValue
+    @Column(name = "ID")
+    private Integer id;
 
-	@Column(name = "ROLL_NO")
-	private Integer rollNo;
+    @Column(name = "ROLL_NO")
+    private Integer rollNo;
 
-	@Column(name = "FIRST_NAME")
-	private String firstName;
+    @Column(name = "FIRST_NAME")
+    private String firstName;
 
-	@Column(name = "LAST_NAME")
-	private String lastName;
+    @Column(name = "LAST_NAME")
+    private String lastName;
 
-	@JsonDeserialize(using = LocalDateDeserializer.class)
-	@JsonSerialize(using = LocalDateSerializer.class)
-	@Column(name = "DATE_OF_BIRTH")
-	private LocalDate dateOfBirth;
+    @JsonDeserialize(using = LocalDateDeserializer.class)
+    @JsonSerialize(using = LocalDateSerializer.class)
+    @Column(name = "DATE_OF_BIRTH")
+    private LocalDate dateOfBirth;
 
-	@Column(name = "MARKS")
-	private Float marks;
+    @Column(name = "MARKS")
+    private Float marks;
 
-	public Student(Integer rollNo, String firstName, String lastName, LocalDate dateOfBirth, Float marks) {
-		this.rollNo = rollNo;
-		this.firstName = firstName;
-		this.lastName = lastName;
-		this.dateOfBirth = dateOfBirth;
-		this.marks = marks;
-	}
+    public Student(Integer rollNo, String firstName, String lastName, LocalDate dateOfBirth, Float marks) {
+        this.rollNo = rollNo;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.dateOfBirth = dateOfBirth;
+        this.marks = marks;
+    }
 }
