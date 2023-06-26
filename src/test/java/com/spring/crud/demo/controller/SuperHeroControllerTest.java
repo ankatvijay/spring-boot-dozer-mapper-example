@@ -1,6 +1,5 @@
 package com.spring.crud.demo.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.dto.SuperHeroDTO;
@@ -12,22 +11,15 @@ import com.spring.crud.demo.model.SuperHero;
 import com.spring.crud.demo.service.ISuperHeroService;
 import com.spring.crud.demo.service.impl.SuperHeroService;
 import com.spring.crud.demo.utils.FileLoader;
-import net.bytebuddy.agent.VirtualMachine;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.groups.Tuple;
-import org.dozer.DozerBeanMapper;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Example;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -38,33 +30,32 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 @ExtendWith(MockitoExtension.class)
 class SuperHeroControllerTest {
 
-
+    private static File file;
+    private static ObjectMapper objectMapper;
+    private static TypeFactory typeFactory;
+    private static SuperHeroMapper superHeroMapper;
     private static ISuperHeroService superHeroService;
-
     private static SuperHeroController superHeroController;
 
-    private static Tuple[] expectedSuperHeros = null;
-    private static List<SuperHeroDTO> superHeroes;
-
     @BeforeAll
-    static void init() throws IOException {
-        ObjectMapper objectMapper = new ObjectMapper();
-        TypeFactory typeFactory = objectMapper.getTypeFactory();
-        File file = FileLoader.getFileFromResource("superheroes.json");
+    static void init() {
+        objectMapper = new ObjectMapper();
+        typeFactory = objectMapper.getTypeFactory();
+        file = FileLoader.getFileFromResource("superheroes.json");
 
-        DozerBeanMapper dozerBeanMapper = new DozerBeanMapper();
-        SuperHeroMapper superHeroMapper = new SuperHeroMapper(dozerBeanMapper);
-
+        superHeroMapper = Mockito.mock(SuperHeroMapper.class);
         superHeroService = Mockito.mock(SuperHeroService.class);
         superHeroController = new SuperHeroController(superHeroService, superHeroMapper, objectMapper);
+    }
 
-        superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        expectedSuperHeros = superHeroes.stream()
+    @Test
+    void testGivenNon_WhenFindAllSuperHeros_ThenReturnAllRecord() throws IOException {
+        // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
+        Tuple[] expectedSuperHeros = superHeroes.stream()
                 .map(superHero -> AssertionsForClassTypes.tuple(
                         superHero.getName(),
                         superHero.getSuperName(),
@@ -72,14 +63,10 @@ class SuperHeroControllerTest {
                         superHero.getAge(),
                         superHero.getCanFly()))
                 .toArray(Tuple[]::new);
-    }
-
-    @Test
-    void testGivenNon_WhenFindAllSuperHeros_ThenReturnAllRecord() {
-        // Given
 
         // When
         Mockito.when(superHeroService.findAllSuperHeros()).thenReturn(superHeroes);
+        superHeroes.forEach(superHero -> Mockito.when(superHeroMapper.convertFromEntityToDto(superHero)).thenReturn(objectMapper.convertValue(superHero, SuperHeroDTO.class)));
         ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findAllSuperHeros();
 
         // Then
@@ -94,16 +81,19 @@ class SuperHeroControllerTest {
                         SuperHeroDTO::getCanFly)
                 .containsExactly(expectedSuperHeros);
         Mockito.verify(superHeroService).findAllSuperHeros();
+        superHeroes.forEach(superHero -> Mockito.verify(superHeroMapper).convertFromEntityToDto(superHero));
     }
 
     @Test
-    void testGivenId_WhenFindSuperHeroById_ThenReturnRecord() {
+    void testGivenId_WhenFindSuperHeroById_ThenReturnRecord() throws IOException {
         // Given
         int id = 12;
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
 
         // When
         Mockito.when(superHeroService.findSuperHeroById(id)).thenReturn(Optional.of(expectedSuperHero));
+        Mockito.when(superHeroMapper.convertFromEntityToDto(expectedSuperHero)).thenReturn(objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class));
         ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.findSuperHeroById(id);
 
         // Then
@@ -111,6 +101,7 @@ class SuperHeroControllerTest {
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
         Mockito.verify(superHeroService).findSuperHeroById(id);
+        Mockito.verify(superHeroMapper).convertFromEntityToDto(expectedSuperHero);
     }
 
     @Test
@@ -120,19 +111,22 @@ class SuperHeroControllerTest {
 
         // When & Then
         Mockito.when(superHeroService.findSuperHeroById(id)).thenReturn(Optional.empty());
-        Assertions.assertThatThrownBy(() -> superHeroService.findSuperHeroById(id))
+        Assertions.assertThatThrownBy(() -> superHeroController.findSuperHeroById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
     }
 
     @Test
-    void testGivenSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
+    void testGivenSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
-        Map<String, Object> map = new ObjectMapper().convertValue(expectedSuperHero, Map.class);
+        Map map = new ObjectMapper().convertValue(expectedSuperHero, Map.class);
 
         // When
         Mockito.when(superHeroService.findSuperHerosByExample(expectedSuperHero)).thenReturn(List.of(expectedSuperHero));
+        Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
+        Mockito.when(superHeroMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(map, SuperHeroDTO.class));
         ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findSuperHerosByExample(map);
 
         // Then
@@ -141,48 +135,64 @@ class SuperHeroControllerTest {
         Assertions.assertThat(actualSuperHeros.getBody().size()).isGreaterThan(0);
         assertSuperHero(expectedSuperHero, actualSuperHeros.getBody().get(0));
         Mockito.verify(superHeroService).findSuperHerosByExample(expectedSuperHero);
+        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
     void testGivenRandomSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
         // Given
         SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
+        Map map = objectMapper.convertValue(expectedSuperHero, Map.class);
         List<SuperHero> superHeroes = new ArrayList<>();
 
         // When
         Mockito.when(superHeroService.findSuperHerosByExample(expectedSuperHero)).thenReturn(superHeroes);
-        List<SuperHero> actualSuperHeros = superHeroService.findSuperHerosByExample(expectedSuperHero);
+        Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
+        Mockito.when(superHeroMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(map, SuperHeroDTO.class));
+        ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findSuperHerosByExample(map);
 
         // Then
         Assertions.assertThat(actualSuperHeros).isNotNull();
-        Assertions.assertThat(actualSuperHeros).isEmpty();
-        Assertions.assertThat(actualSuperHeros.size()).isEqualTo(0);
+
+        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(actualSuperHeros.getBody()).isNotNull();
+        Assertions.assertThat(actualSuperHeros.getBody()).isEmpty();
+        Assertions.assertThat(actualSuperHeros.getBody().size()).isEqualTo(0);
         Mockito.verify(superHeroService).findSuperHerosByExample(expectedSuperHero);
+        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() {
+    void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
 
         // When
         Mockito.when(superHeroService.saveSuperHero(expectedSuperHero)).thenReturn(Optional.of(expectedSuperHero));
-        ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.saveSuperHero(expectedSuperHero);
+        Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
+        ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.saveSuperHero(superHeroMapper.convertFromEntityToDto(expectedSuperHero));
 
         // Then
-        assertSuperHero(expectedSuperHero, actualSuperHero);
+        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
+        assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
         Mockito.verify(superHeroService).saveSuperHero(expectedSuperHero);
+        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
-    void testGivenExistingSuperHero_WhenSaveSuperHero_ThenThrowError() {
+    void testGivenExistingSuperHero_WhenSaveSuperHero_ThenThrowError() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
         expectedSuperHero.setId(15);
 
         // When
         Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(true);
-        Assertions.assertThatThrownBy(() -> superHeroService.saveSuperHero(expectedSuperHero))
+        Assertions.assertThatThrownBy(() -> superHeroController.saveSuperHero(superHeroMapper.convertFromEntityToDto(expectedSuperHero)))
                 .isInstanceOf(RecordFoundException.class)
                 .hasMessage("Record already found with id " + expectedSuperHero.getId());
 
@@ -191,18 +201,21 @@ class SuperHeroControllerTest {
     }
 
     @Test
-    void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() {
+    void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
         expectedSuperHero.setId(15);
 
         // When
         Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(true);
         Mockito.when(superHeroService.saveSuperHero(expectedSuperHero)).thenReturn(Optional.of(expectedSuperHero));
-        SuperHero actualSuperHero = superHeroService.updateSuperHero(expectedSuperHero.getId(), expectedSuperHero).orElseGet(SuperHero::new);
+        ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.updateSuperHero(expectedSuperHero.getId(), superHeroMapper.convertFromEntityToDto(expectedSuperHero));
 
         // Then
-        assertSuperHero(expectedSuperHero, actualSuperHero);
+        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
+        assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
         Mockito.verify(superHeroService).existsBySuperHeroId(expectedSuperHero.getId());
         Mockito.verify(superHeroService).saveSuperHero(expectedSuperHero);
     }
@@ -213,27 +226,29 @@ class SuperHeroControllerTest {
         int id = RandomUtils.nextInt();
 
         // When & Then
-        Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(id, null))
+        Assertions.assertThatThrownBy(() -> superHeroController.updateSuperHero(id, null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Payload record id is null");
     }
 
     @Test
-    void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() {
+    void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() throws IOException {
         // Given
         int id = RandomUtils.nextInt();
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
         expectedSuperHero.setId(15);
 
         // When & Then
-        Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(id, expectedSuperHero))
+        Assertions.assertThatThrownBy(() -> superHeroController.updateSuperHero(id, superHeroMapper.convertFromEntityToDto(expectedSuperHero)))
                 .isInstanceOf(InternalServerErrorException.class)
                 .hasMessage("Update Record id: " + id + " not equal to payload id: " + expectedSuperHero.getId());
     }
 
     @Test
-    void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() {
+    void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
         expectedSuperHero.setId(15);
 
@@ -241,24 +256,25 @@ class SuperHeroControllerTest {
         Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(false);
 
         // Then
-        Assertions.assertThatThrownBy(() -> superHeroService.updateSuperHero(expectedSuperHero.getId(), expectedSuperHero))
+        Assertions.assertThatThrownBy(() -> superHeroController.updateSuperHero(expectedSuperHero.getId(), superHeroMapper.convertFromEntityToDto(expectedSuperHero)))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + expectedSuperHero.getId());
         Mockito.verify(superHeroService).existsBySuperHeroId(expectedSuperHero.getId());
     }
 
     @Test
-    void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() {
+    void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() throws IOException {
         // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
         expectedSuperHero.setId(15);
 
         // When
         Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(true);
-        Boolean flag = superHeroService.deleteSuperHero(expectedSuperHero.getId());
+        ResponseEntity<Boolean> flag = superHeroController.deleteSuperHero(expectedSuperHero.getId());
 
         // Then
-        Assertions.assertThat(flag).isTrue();
+        Assertions.assertThat(flag.getBody()).isTrue();
         Mockito.verify(superHeroService).existsBySuperHeroId(expectedSuperHero.getId());
     }
 
@@ -269,24 +285,13 @@ class SuperHeroControllerTest {
 
         // When
         Mockito.when(superHeroService.existsBySuperHeroId(id)).thenReturn(false);
-        Boolean flag = superHeroService.deleteSuperHero(id);
+        ResponseEntity<Boolean> flag = superHeroController.deleteSuperHero(id);
 
         // Then
-        Assertions.assertThat(flag).isFalse();
+        Assertions.assertThat(flag.getBody()).isFalse();
         Mockito.verify(superHeroService).existsBySuperHeroId(id);
     }
 
-    @Test
-    void testGiveNon_WhenDeleteAllSuperHero_ThenReturnNon() {
-        // Given
-
-        // When
-        Mockito.doNothing().when(superHeroService).deleteAllSuperHero();
-        superHeroService.deleteAllSuperHero();
-
-        // Then
-        Mockito.verify(superHeroService).deleteAllSuperHero();
-    }
 
     private void assertSuperHero(SuperHero expectedSuperHero, SuperHeroDTO actualSuperHero) {
         Assertions.assertThat(actualSuperHero).isNotNull();
