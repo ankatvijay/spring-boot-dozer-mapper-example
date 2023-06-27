@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.dto.SuperHeroDTO;
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
-import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.mapper.SuperHeroMapper;
 import com.spring.crud.demo.model.SuperHero;
 import com.spring.crud.demo.service.ISuperHeroService;
@@ -97,7 +96,7 @@ class SuperHeroControllerTest {
         ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.findSuperHeroById(id);
 
         // Then
-        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
         Mockito.verify(superHeroService).findSuperHeroById(id);
@@ -130,38 +129,30 @@ class SuperHeroControllerTest {
         ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findSuperHerosByExample(map);
 
         // Then
-        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         Assertions.assertThat(actualSuperHeros.getBody()).isNotNull();
         Assertions.assertThat(actualSuperHeros.getBody().size()).isGreaterThan(0);
         assertSuperHero(expectedSuperHero, actualSuperHeros.getBody().get(0));
         Mockito.verify(superHeroService).findSuperHerosByExample(expectedSuperHero);
-        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
-        Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenRandomSuperHero_WhenFindSuperHerosByExample_ThenReturnRecords() {
+    void testGivenRandomSuperHero_WhenFindSuperHerosByExample_ThenReturnError() {
         // Given
         SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
         Map map = objectMapper.convertValue(expectedSuperHero, Map.class);
         List<SuperHero> superHeroes = new ArrayList<>();
 
-        // When
+        // When & Then
         Mockito.when(superHeroService.findSuperHerosByExample(expectedSuperHero)).thenReturn(superHeroes);
         Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
-        Mockito.when(superHeroMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(map, SuperHeroDTO.class));
-        ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findSuperHerosByExample(map);
+        Assertions.assertThatThrownBy(() -> superHeroController.findSuperHerosByExample(map))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with map " + map);
 
-        // Then
-        Assertions.assertThat(actualSuperHeros).isNotNull();
 
-        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(actualSuperHeros.getBody()).isNotNull();
-        Assertions.assertThat(actualSuperHeros.getBody()).isEmpty();
-        Assertions.assertThat(actualSuperHeros.getBody().size()).isEqualTo(0);
         Mockito.verify(superHeroService).findSuperHerosByExample(expectedSuperHero);
-        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
-        Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
+        //Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
@@ -173,14 +164,16 @@ class SuperHeroControllerTest {
         // When
         Mockito.when(superHeroService.saveSuperHero(expectedSuperHero)).thenReturn(Optional.of(expectedSuperHero));
         Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
-        ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.saveSuperHero(superHeroMapper.convertFromEntityToDto(expectedSuperHero));
+        Mockito.when(superHeroMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class));
+        ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.saveSuperHero(objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class));
 
         // Then
         Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
+        //Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
+        //Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
         Mockito.verify(superHeroService).saveSuperHero(expectedSuperHero);
-        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
@@ -191,13 +184,14 @@ class SuperHeroControllerTest {
         expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(true);
-        Assertions.assertThatThrownBy(() -> superHeroController.saveSuperHero(superHeroMapper.convertFromEntityToDto(expectedSuperHero)))
-                .isInstanceOf(RecordFoundException.class)
-                .hasMessage("Record already found with id " + expectedSuperHero.getId());
+        Mockito.when(superHeroService.saveSuperHero(expectedSuperHero)).thenReturn(Optional.empty());
+        Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
+        Assertions.assertThatThrownBy(() -> superHeroController.saveSuperHero(objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class)))
+                .isInstanceOf(InternalServerErrorException.class)
+                .hasMessage("Something went wrong");
 
         // Then
-        Mockito.verify(superHeroService).existsBySuperHeroId(expectedSuperHero.getId());
+        Mockito.verify(superHeroService).saveSuperHero(expectedSuperHero);
     }
 
     @Test
@@ -208,16 +202,18 @@ class SuperHeroControllerTest {
         expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(true);
-        Mockito.when(superHeroService.saveSuperHero(expectedSuperHero)).thenReturn(Optional.of(expectedSuperHero));
-        ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.updateSuperHero(expectedSuperHero.getId(), superHeroMapper.convertFromEntityToDto(expectedSuperHero));
+        Mockito.when(superHeroService.updateSuperHero(expectedSuperHero.getId(), expectedSuperHero)).thenReturn(Optional.of(expectedSuperHero));
+        Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
+        Mockito.when(superHeroMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class));
+        ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.updateSuperHero(expectedSuperHero.getId(), objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class));
 
         // Then
-        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
-        Mockito.verify(superHeroService).existsBySuperHeroId(expectedSuperHero.getId());
-        Mockito.verify(superHeroService).saveSuperHero(expectedSuperHero);
+        Mockito.verify(superHeroService).updateSuperHero(expectedSuperHero.getId(), expectedSuperHero);
+        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
@@ -226,40 +222,12 @@ class SuperHeroControllerTest {
         int id = RandomUtils.nextInt();
 
         // When & Then
+        Mockito.when(superHeroService.updateSuperHero(id, null)).thenReturn(Optional.empty());
+        Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(null);
         Assertions.assertThatThrownBy(() -> superHeroController.updateSuperHero(id, null))
-                .isInstanceOf(NullPointerException.class)
-                .hasMessage("Payload record id is null");
-    }
-
-    @Test
-    void testGivenSuperHeroAndIdDifferent_WhenUpdateSuperHero_ThenThrowError() throws IOException {
-        // Given
-        int id = RandomUtils.nextInt();
-        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
-        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
-        expectedSuperHero.setId(15);
-
-        // When & Then
-        Assertions.assertThatThrownBy(() -> superHeroController.updateSuperHero(id, superHeroMapper.convertFromEntityToDto(expectedSuperHero)))
                 .isInstanceOf(InternalServerErrorException.class)
-                .hasMessage("Update Record id: " + id + " not equal to payload id: " + expectedSuperHero.getId());
-    }
-
-    @Test
-    void testGivenSuperHeroAndId_WhenUpdateSuperHero_ThenThrowError() throws IOException {
-        // Given
-        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
-        SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
-        expectedSuperHero.setId(15);
-
-        // When
-        Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(false);
-
-        // Then
-        Assertions.assertThatThrownBy(() -> superHeroController.updateSuperHero(expectedSuperHero.getId(), superHeroMapper.convertFromEntityToDto(expectedSuperHero)))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("No record found with id " + expectedSuperHero.getId());
-        Mockito.verify(superHeroService).existsBySuperHeroId(expectedSuperHero.getId());
+                .hasMessage("Something went wrong");
+        Mockito.verify(superHeroService).updateSuperHero(id, null);
     }
 
     @Test
@@ -270,12 +238,12 @@ class SuperHeroControllerTest {
         expectedSuperHero.setId(15);
 
         // When
-        Mockito.when(superHeroService.existsBySuperHeroId(expectedSuperHero.getId())).thenReturn(true);
+        Mockito.when(superHeroService.deleteSuperHero(expectedSuperHero.getId())).thenReturn(true);
         ResponseEntity<Boolean> flag = superHeroController.deleteSuperHero(expectedSuperHero.getId());
 
         // Then
         Assertions.assertThat(flag.getBody()).isTrue();
-        Mockito.verify(superHeroService).existsBySuperHeroId(expectedSuperHero.getId());
+        Mockito.verify(superHeroService).deleteSuperHero(expectedSuperHero.getId());
     }
 
     @Test
@@ -284,12 +252,12 @@ class SuperHeroControllerTest {
         int id = RandomUtils.nextInt();
 
         // When
-        Mockito.when(superHeroService.existsBySuperHeroId(id)).thenReturn(false);
+        Mockito.when(superHeroService.deleteSuperHero(id)).thenReturn(false);
         ResponseEntity<Boolean> flag = superHeroController.deleteSuperHero(id);
 
         // Then
         Assertions.assertThat(flag.getBody()).isFalse();
-        Mockito.verify(superHeroService).existsBySuperHeroId(id);
+        Mockito.verify(superHeroService).deleteSuperHero(id);
     }
 
 

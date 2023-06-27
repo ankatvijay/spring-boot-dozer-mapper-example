@@ -37,7 +37,7 @@ public class SuperHeroController {
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<SuperHeroDTO> findSuperHeroById(@PathVariable int id) {
         Optional<SuperHero> optionalSuperHero = superHeroService.findSuperHeroById(id);
-        if(optionalSuperHero.isEmpty()){
+        if (optionalSuperHero.isEmpty()) {
             throw new NotFoundException("No record found with id " + id);
         }
         return ResponseEntity.status(HttpStatus.FOUND).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
@@ -45,13 +45,12 @@ public class SuperHeroController {
 
     @GetMapping(value = "/search", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<List<SuperHeroDTO>> findSuperHerosByExample(@RequestParam Map<String, Object> allRequestParams) {
-        try {
-            SuperHeroDTO superHeroDTO = objectMapper.convertValue(allRequestParams, SuperHeroDTO.class);
-            List<SuperHero> superHeroList = superHeroService.findSuperHerosByExample(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
-            return ResponseEntity.status(HttpStatus.FOUND).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Something went wrong");
+        SuperHeroDTO superHeroDTO = objectMapper.convertValue(allRequestParams, SuperHeroDTO.class);
+        List<SuperHero> superHeroList = superHeroService.findSuperHerosByExample(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
+        if (superHeroList.isEmpty()) {
+            throw new NotFoundException("No record found with map " + allRequestParams);
         }
+        return ResponseEntity.status(HttpStatus.FOUND).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -76,7 +75,7 @@ public class SuperHeroController {
         if (optionalSuperHero.isEmpty()) {
             throw new InternalServerErrorException("Something went wrong");
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
         /*
         try {
             Optional<SuperHero> optionalSuperHero = superHeroService.updateSuperHero(id, superHeroMapper.convertFromDtoToEntity(superHeroDTO));
