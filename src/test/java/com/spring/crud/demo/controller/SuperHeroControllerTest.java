@@ -69,7 +69,7 @@ class SuperHeroControllerTest {
         ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findAllSuperHeros();
 
         // Then
-        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         Assertions.assertThat(actualSuperHeros.getBody()).isNotNull();
         Assertions.assertThat(actualSuperHeros.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(actualSuperHeros.getBody())
@@ -79,8 +79,21 @@ class SuperHeroControllerTest {
                         SuperHeroDTO::getAge,
                         SuperHeroDTO::getCanFly)
                 .containsExactly(expectedSuperHeros);
-        Mockito.verify(superHeroService).findAllSuperHeros();
+        Mockito.verify(superHeroService,Mockito.atLeastOnce()).findAllSuperHeros();
         superHeroes.forEach(superHero -> Mockito.verify(superHeroMapper).convertFromEntityToDto(superHero));
+    }
+
+    @Test
+    void testGivenNon_WhenFindAllSuperHeros_ThenReturnError() {
+        // Given
+        List<SuperHero> superHeroList = new ArrayList<>();
+
+        // When & Then
+        Mockito.when(superHeroService.findAllSuperHeros()).thenReturn(superHeroList);
+        Assertions.assertThatThrownBy(() -> superHeroController.findAllSuperHeros())
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found");
+        Mockito.verify(superHeroService).findAllSuperHeros();
     }
 
     @Test

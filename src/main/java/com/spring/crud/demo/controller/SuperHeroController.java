@@ -31,7 +31,10 @@ public class SuperHeroController {
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<List<SuperHeroDTO>> findAllSuperHeros() {
         List<SuperHero> superHeroList = superHeroService.findAllSuperHeros();
-        return ResponseEntity.ok().body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        if (superHeroList.isEmpty()) {
+            throw new NotFoundException("No record found");
+        }
+        return ResponseEntity.status(HttpStatus.FOUND).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -60,13 +63,6 @@ public class SuperHeroController {
             throw new InternalServerErrorException("Something went wrong");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
-        /*
-        URI uri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                .path("/{id}")
-                .buildAndExpand(optionalSuperHero.get().getId())
-                .toUri();
-        return ResponseEntity.created(uri).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
-        */
     }
 
     @PutMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -92,10 +88,6 @@ public class SuperHeroController {
 
     @DeleteMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Boolean> deleteSuperHero(@PathVariable int id) {
-        try {
-            return ResponseEntity.ok().body(superHeroService.deleteSuperHero(id));
-        } catch (Exception ex) {
-            throw new InternalServerErrorException("Something went wrong");
-        }
+        return ResponseEntity.ok().body(superHeroService.deleteSuperHero(id));
     }
 }

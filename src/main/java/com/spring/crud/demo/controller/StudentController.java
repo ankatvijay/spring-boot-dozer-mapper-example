@@ -32,17 +32,19 @@ public class StudentController {
     @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<List<StudentDTO>> findAllStudents() {
         List<Student> studentList = studentService.findAllStudents();
+        if (studentList.isEmpty()) {
+            throw new NotFoundException("No record found");
+        }
         return ResponseEntity.ok().body(studentList.stream().map(student -> studentMapper.convertFromEntityToDto(student)).collect(Collectors.toList()));
-
     }
 
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<StudentDTO> findStudentById(@PathVariable int id) {
-        try {
-            return ResponseEntity.ok().body(studentMapper.convertFromEntityToDto(studentService.findStudentById(id).get()));
-        } catch (Exception ex) {
-            throw new NotFoundException("No Student found : " + id);
+        Optional<Student> optionalStudent = studentService.findStudentById(id);
+        if (optionalStudent.isEmpty()) {
+            throw new NotFoundException("No record found with id " + id);
         }
+        return ResponseEntity.status(HttpStatus.FOUND).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
     }
 
     @GetMapping(value = "/{rollNo}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -56,52 +58,37 @@ public class StudentController {
 
     @GetMapping(value = "/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<List<StudentDTO>> findStudentsByExample(@RequestParam Map<String, Object> allRequestParams) {
-        try {
-            StudentDTO studentDTO = objectMapper.convertValue(allRequestParams, StudentDTO.class);
-            List<Student> studentList = studentService.findStudentsByExample(studentMapper.convertFromDtoToEntity(studentDTO));
-            return ResponseEntity.status(HttpStatus.OK).body(studentList.stream().map(student -> studentMapper.convertFromEntityToDto(student)).collect(Collectors.toList()));
-        } catch (Exception ex) {
-            throw new IllegalArgumentException("Something went wrong");
+        StudentDTO studentDTO = objectMapper.convertValue(allRequestParams, StudentDTO.class);
+        List<Student> studentList = studentService.findStudentsByExample(studentMapper.convertFromDtoToEntity(studentDTO));
+        if (studentList.isEmpty()) {
+            throw new NotFoundException("No record found with map " + allRequestParams);
         }
+        return ResponseEntity.status(HttpStatus.FOUND).body(studentList.stream().map(student -> studentMapper.convertFromEntityToDto(student)).collect(Collectors.toList()));
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<StudentDTO> saveStudent(@RequestBody StudentDTO studentDTO) {
-        try {
-            Optional<Student> optionalStudent = studentService.saveStudent(studentMapper.convertFromDtoToEntity(studentDTO));
-            URI uri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/{id}")
-                    .buildAndExpand(optionalStudent.get().getId())
-                    .toUri();
-            return ResponseEntity.created(uri).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
-        } catch (Exception ex) {
+        Optional<Student> optionalStudent = studentService.saveStudent(studentMapper.convertFromDtoToEntity(studentDTO));
+        if (optionalStudent.isEmpty()) {
             throw new InternalServerErrorException("Something went wrong");
         }
+        return ResponseEntity.status(HttpStatus.CREATED).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
     }
 
 
     @PutMapping(value = "/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<StudentDTO> updateStudent(@PathVariable int id, @RequestBody StudentDTO studentDTO) {
-        try {
-            Optional<Student> optionalStudent = studentService.updateStudent(id, studentMapper.convertFromDtoToEntity(studentDTO));
-            URI uri = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/{id}")
-                    .buildAndExpand(optionalStudent.get().getId())
-                    .toUri();
-            return ResponseEntity.created(uri).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
-        } catch (Exception ex) {
+        Optional<Student> optionalStudent = studentService.updateStudent(id, studentMapper.convertFromDtoToEntity(studentDTO));
+        if (optionalStudent.isEmpty()) {
             throw new InternalServerErrorException("Something went wrong");
         }
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
     }
 
 
     @DeleteMapping(value = "/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Boolean> deleteStudent(@PathVariable int id) {
-        try {
-            return ResponseEntity.ok().body(studentService.deleteStudent(id));
-        } catch (Exception ex) {
-            throw new InternalServerErrorException("Something went wrong");
-        }
+        return ResponseEntity.ok().body(studentService.deleteStudent(id));
     }
 }
 
