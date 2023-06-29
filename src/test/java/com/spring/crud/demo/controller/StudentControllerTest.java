@@ -71,7 +71,7 @@ class StudentControllerTest {
         ResponseEntity<List<StudentDTO>> actualStudents = studentController.findAllStudents();
 
         // Then
-        Assertions.assertThat(actualStudents.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(actualStudents.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         Assertions.assertThat(actualStudents.getBody()).isNotNull();
         Assertions.assertThat(actualStudents.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(actualStudents.getBody())
@@ -82,7 +82,7 @@ class StudentControllerTest {
                         StudentDTO::getMarks)
                 .containsExactly(expectedStudents);
         Mockito.verify(studentService, Mockito.atLeastOnce()).findAllStudents();
-        students.forEach(student -> Mockito.verify(studentMapper).convertFromEntityToDto(student));
+        students.forEach(student -> Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(student));
     }
 
     @Test
@@ -115,7 +115,7 @@ class StudentControllerTest {
         Assertions.assertThat(actualStudent.getBody()).isNotNull();
         assertStudent(expectedStudent, actualStudent.getBody());
         Mockito.verify(studentService).findStudentById(id);
-        Mockito.verify(studentMapper).convertFromEntityToDto(expectedStudent);
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(expectedStudent);
     }
 
     @Test
@@ -131,11 +131,43 @@ class StudentControllerTest {
     }
 
     @Test
+    void testGivenId_WhenFindStudentByRollNo_ThenReturnRecord() throws IOException {
+        // Given
+        int rollNo = 12;
+        List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
+        Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+
+        // When
+        Mockito.when(studentService.findStudentByRollNo(rollNo)).thenReturn(Optional.of(expectedStudent));
+        Mockito.when(studentMapper.convertFromEntityToDto(expectedStudent)).thenReturn(objectMapper.convertValue(expectedStudent, StudentDTO.class));
+        ResponseEntity<StudentDTO> actualStudent = studentController.findStudentByRollNo(rollNo);
+
+        // Then
+        Assertions.assertThat(actualStudent.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        Assertions.assertThat(actualStudent.getBody()).isNotNull();
+        assertStudent(expectedStudent, actualStudent.getBody());
+        Mockito.verify(studentService).findStudentByRollNo(rollNo);
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(expectedStudent);
+    }
+
+    @Test
+    void testGivenRandomId_WhenFindStudentByRollNo_ThenReturnRecord() {
+        // Given
+        int rollNo = RandomUtils.nextInt();
+
+        // When & Then
+        Mockito.when(studentService.findStudentByRollNo(rollNo)).thenReturn(Optional.empty());
+        Assertions.assertThatThrownBy(() -> studentController.findStudentByRollNo(rollNo))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with rollNo " + rollNo);
+    }
+
+    @Test
     void testGivenStudent_WhenFindStudentsByExample_ThenReturnRecords() throws IOException {
         // Given
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
-        Map map = new ObjectMapper().convertValue(expectedStudent, Map.class);
+        Map<String, Object> map = new ObjectMapper().convertValue(expectedStudent, Map.class);
 
         // When
         Mockito.when(studentService.findStudentsByExample(expectedStudent)).thenReturn(List.of(expectedStudent));
@@ -149,13 +181,15 @@ class StudentControllerTest {
         Assertions.assertThat(actualStudents.getBody().size()).isGreaterThan(0);
         assertStudent(expectedStudent, actualStudents.getBody().get(0));
         Mockito.verify(studentService).findStudentsByExample(expectedStudent);
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
     void testGivenRandomStudent_WhenFindStudentsByExample_ThenReturnError() {
         // Given
         Student expectedStudent = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
-        Map map = objectMapper.convertValue(expectedStudent, Map.class);
+        Map<String, Object> map = objectMapper.convertValue(expectedStudent, Map.class);
         List<Student> students = new ArrayList<>();
 
         // When & Then
@@ -167,7 +201,7 @@ class StudentControllerTest {
 
 
         Mockito.verify(studentService).findStudentsByExample(expectedStudent);
-        //Mockito.verify(studentMapper).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
@@ -186,9 +220,9 @@ class StudentControllerTest {
         Assertions.assertThat(actualStudent.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(actualStudent.getBody()).isNotNull();
         assertStudent(expectedStudent, actualStudent.getBody());
-        //Mockito.verify(studentMapper).convertFromDtoToEntity(Mockito.any());
-        //Mockito.verify(studentMapper).convertFromEntityToDto(Mockito.any());
         Mockito.verify(studentService).saveStudent(expectedStudent);
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
@@ -207,6 +241,7 @@ class StudentControllerTest {
 
         // Then
         Mockito.verify(studentService).saveStudent(expectedStudent);
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
@@ -227,8 +262,8 @@ class StudentControllerTest {
         Assertions.assertThat(actualStudent.getBody()).isNotNull();
         assertStudent(expectedStudent, actualStudent.getBody());
         Mockito.verify(studentService).updateStudent(expectedStudent.getId(), expectedStudent);
-        //Mockito.verify(studentMapper).convertFromDtoToEntity(Mockito.any());
-        //Mockito.verify(studentMapper).convertFromEntityToDto(Mockito.any());
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test

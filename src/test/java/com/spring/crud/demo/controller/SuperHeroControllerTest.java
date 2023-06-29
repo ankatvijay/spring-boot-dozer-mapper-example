@@ -79,8 +79,8 @@ class SuperHeroControllerTest {
                         SuperHeroDTO::getAge,
                         SuperHeroDTO::getCanFly)
                 .containsExactly(expectedSuperHeros);
-        Mockito.verify(superHeroService,Mockito.atLeastOnce()).findAllSuperHeros();
-        superHeroes.forEach(superHero -> Mockito.verify(superHeroMapper).convertFromEntityToDto(superHero));
+        Mockito.verify(superHeroService, Mockito.atLeastOnce()).findAllSuperHeros();
+        superHeroes.forEach(superHero -> Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromEntityToDto(superHero));
     }
 
     @Test
@@ -113,7 +113,7 @@ class SuperHeroControllerTest {
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
         Mockito.verify(superHeroService).findSuperHeroById(id);
-        Mockito.verify(superHeroMapper).convertFromEntityToDto(expectedSuperHero);
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromEntityToDto(expectedSuperHero);
     }
 
     @Test
@@ -133,7 +133,7 @@ class SuperHeroControllerTest {
         // Given
         List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero expectedSuperHero = superHeroes.stream().filter(superHero -> superHero.getSuperName().equals("Deadpool")).findFirst().orElseGet(SuperHero::new);
-        Map map = new ObjectMapper().convertValue(expectedSuperHero, Map.class);
+        Map<String, Object> map = new ObjectMapper().convertValue(expectedSuperHero, Map.class);
 
         // When
         Mockito.when(superHeroService.findSuperHerosByExample(expectedSuperHero)).thenReturn(List.of(expectedSuperHero));
@@ -147,13 +147,15 @@ class SuperHeroControllerTest {
         Assertions.assertThat(actualSuperHeros.getBody().size()).isGreaterThan(0);
         assertSuperHero(expectedSuperHero, actualSuperHeros.getBody().get(0));
         Mockito.verify(superHeroService).findSuperHerosByExample(expectedSuperHero);
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
     void testGivenRandomSuperHero_WhenFindSuperHerosByExample_ThenReturnError() {
         // Given
         SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
-        Map map = objectMapper.convertValue(expectedSuperHero, Map.class);
+        Map<String, Object> map = objectMapper.convertValue(expectedSuperHero, Map.class);
         List<SuperHero> superHeroes = new ArrayList<>();
 
         // When & Then
@@ -165,7 +167,7 @@ class SuperHeroControllerTest {
 
 
         Mockito.verify(superHeroService).findSuperHerosByExample(expectedSuperHero);
-        //Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
@@ -184,9 +186,9 @@ class SuperHeroControllerTest {
         Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
-        //Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
-        //Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
         Mockito.verify(superHeroService).saveSuperHero(expectedSuperHero);
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
@@ -205,6 +207,7 @@ class SuperHeroControllerTest {
 
         // Then
         Mockito.verify(superHeroService).saveSuperHero(expectedSuperHero);
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
@@ -225,8 +228,8 @@ class SuperHeroControllerTest {
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
         Mockito.verify(superHeroService).updateSuperHero(expectedSuperHero.getId(), expectedSuperHero);
-        Mockito.verify(superHeroMapper).convertFromDtoToEntity(Mockito.any());
-        Mockito.verify(superHeroMapper).convertFromEntityToDto(Mockito.any());
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
@@ -241,6 +244,7 @@ class SuperHeroControllerTest {
                 .isInstanceOf(InternalServerErrorException.class)
                 .hasMessage("Something went wrong");
         Mockito.verify(superHeroService).updateSuperHero(id, null);
+        Mockito.verify(superHeroMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test

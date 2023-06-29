@@ -33,9 +33,9 @@ class StudentRepositoryTest {
 
     @Autowired
     private StudentRepository studentRepository;
-    public static File file = FileLoader.getFileFromResource("students.json");
-    public static ObjectMapper objectMapper = new ObjectMapper();
-    public static TypeFactory typeFactory = objectMapper.getTypeFactory();
+    private static final File file = FileLoader.getFileFromResource("students.json");
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final TypeFactory typeFactory = objectMapper.getTypeFactory();
 
     @BeforeEach
     void init() {

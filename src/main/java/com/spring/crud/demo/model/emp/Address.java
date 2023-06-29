@@ -41,12 +41,4 @@ public class Address implements Serializable {
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "EMPLOYEE_ID", referencedColumnName = "ID", nullable = false)
     private Employee employee;
-    /*
-    @OneToOne(mappedBy = "address",
-            cascade = {
-                    CascadeType.MERGE,
-                    CascadeType.PERSIST,
-                    CascadeType.REMOVE
-            })
-    */
 }

@@ -12,9 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +33,7 @@ public class StudentController {
         if (studentList.isEmpty()) {
             throw new NotFoundException("No record found");
         }
-        return ResponseEntity.ok().body(studentList.stream().map(student -> studentMapper.convertFromEntityToDto(student)).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.FOUND).body(studentList.stream().map(studentMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -49,11 +47,11 @@ public class StudentController {
 
     @GetMapping(value = "/{rollNo}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<StudentDTO> findStudentByRollNo(@PathVariable int rollNo) {
-        try {
-            return ResponseEntity.ok().body(studentMapper.convertFromEntityToDto(studentService.findStudentByRollNo(rollNo).get()));
-        } catch (Exception ex) {
-            throw new NotFoundException("No Student found : " + rollNo);
+        Optional<Student> optionalStudent = studentService.findStudentByRollNo(rollNo);
+        if (optionalStudent.isEmpty()) {
+            throw new NotFoundException("No record found with rollNo " + rollNo);
         }
+        return ResponseEntity.status(HttpStatus.FOUND).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
     }
 
     @GetMapping(value = "/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -63,7 +61,7 @@ public class StudentController {
         if (studentList.isEmpty()) {
             throw new NotFoundException("No record found with map " + allRequestParams);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(studentList.stream().map(student -> studentMapper.convertFromEntityToDto(student)).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.FOUND).body(studentList.stream().map(studentMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})

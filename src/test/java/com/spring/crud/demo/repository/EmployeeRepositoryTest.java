@@ -52,7 +52,8 @@ class EmployeeRepositoryTest {
         List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         employeeRepository.saveAll(employees);
         Tuple[] expectedEmployees = employees.stream()
-                .map(employee -> AssertionsForClassTypes.tuple(employee.getFirstName(),
+                .map(employee -> AssertionsForClassTypes.tuple(
+                        employee.getFirstName(),
                         employee.getLastName(),
                         employee.getAge(),
                         employee.getNoOfChildrens(),

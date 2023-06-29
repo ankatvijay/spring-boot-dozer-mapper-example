@@ -18,13 +18,19 @@ public class RestExceptionHandler {
     @ExceptionHandler(value = {InternalServerErrorException.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponseDTO internalServerErrorException(InternalServerErrorException ex) {
-        return new ErrorResponseDTO(500, String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis()), ex.getMessage());
+        return new ErrorResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis()), ex.getMessage());
     }
 
     @ExceptionHandler(value = {NotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponseDTO notFoundException(NotFoundException ex) {
-        return new ErrorResponseDTO(404, dateFormat.format(new Date(System.currentTimeMillis())), ex.getMessage());
+        return new ErrorResponseDTO(HttpStatus.NOT_FOUND.value(), dateFormat.format(new Date(System.currentTimeMillis())), ex.getMessage());
+    }
+
+    @ExceptionHandler(value = {RecordFoundException.class})
+    @ResponseStatus(HttpStatus.FOUND)
+    public ErrorResponseDTO foundException(RecordFoundException ex) {
+        return new ErrorResponseDTO(HttpStatus.FOUND.value(), dateFormat.format(new Date(System.currentTimeMillis())), ex.getMessage());
     }
 
 }
