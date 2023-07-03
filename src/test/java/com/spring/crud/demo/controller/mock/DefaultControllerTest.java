@@ -1,5 +1,6 @@
-package com.spring.crud.demo.controller;
+package com.spring.crud.demo.controller.mock;
 
+import com.spring.crud.demo.controller.DefaultController;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

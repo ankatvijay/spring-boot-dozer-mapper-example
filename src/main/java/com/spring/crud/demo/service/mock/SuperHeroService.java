@@ -1,4 +1,4 @@
-package com.spring.crud.demo.service.impl;
+package com.spring.crud.demo.service.mock;
 
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
@@ -57,7 +57,7 @@ public class SuperHeroService implements ISuperHeroService {
     @Override
     public Optional<SuperHero> updateSuperHero(int id, SuperHero superHero) {
         if (id > 0 && Objects.nonNull(superHero) && Objects.nonNull(superHero.getId())) {
-            if (id == superHero.getId().intValue()) {
+            if (id == superHero.getId()) {
                 if (superHeroRepository.existsById(id)) {
                     return Optional.of(superHeroRepository.save(superHero));
                 }

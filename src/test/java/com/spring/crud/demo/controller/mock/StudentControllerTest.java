@@ -1,14 +1,15 @@
-package com.spring.crud.demo.controller;
+package com.spring.crud.demo.controller.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.spring.crud.demo.controller.StudentController;
 import com.spring.crud.demo.dto.StudentDTO;
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.mapper.StudentMapper;
 import com.spring.crud.demo.model.Student;
 import com.spring.crud.demo.service.IStudentService;
-import com.spring.crud.demo.service.impl.StudentService;
+import com.spring.crud.demo.service.mock.StudentService;
 import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;

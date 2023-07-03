@@ -1,4 +1,4 @@
-package com.spring.crud.demo.service.impl;
+package com.spring.crud.demo.service.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;

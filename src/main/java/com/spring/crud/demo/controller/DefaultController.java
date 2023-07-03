@@ -14,7 +14,7 @@ public class DefaultController {
 
     @Operation(summary = "Swagger documentation url", hidden = true)
     @GetMapping
-    ResponseEntity<Void> redirect() {
+    public ResponseEntity<Void> redirect() {
         return ResponseEntity.status(HttpStatus.FOUND)
                 .location(URI.create("swagger-ui-custom.html"))
                 .build();

@@ -1,14 +1,15 @@
-package com.spring.crud.demo.controller;
+package com.spring.crud.demo.controller.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.spring.crud.demo.controller.SuperHeroController;
 import com.spring.crud.demo.dto.SuperHeroDTO;
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.mapper.SuperHeroMapper;
 import com.spring.crud.demo.model.SuperHero;
 import com.spring.crud.demo.service.ISuperHeroService;
-import com.spring.crud.demo.service.impl.SuperHeroService;
+import com.spring.crud.demo.service.mock.SuperHeroService;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;

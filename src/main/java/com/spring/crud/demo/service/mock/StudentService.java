@@ -1,10 +1,9 @@
-package com.spring.crud.demo.service.impl;
+package com.spring.crud.demo.service.mock;
 
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.Student;
-import com.spring.crud.demo.model.SuperHero;
 import com.spring.crud.demo.repository.StudentRepository;
 import com.spring.crud.demo.service.IStudentService;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +66,7 @@ public class StudentService implements IStudentService {
     @Override
     public Optional<Student> updateStudent(int id, Student student) {
         if (id > 0 && Objects.nonNull(student) && Objects.nonNull(student.getId())) {
-            if (id == student.getId().intValue()) {
+            if (id == student.getId()) {
                 if (studentRepository.existsById(id)) {
                     return Optional.of(studentRepository.save(student));
                 }

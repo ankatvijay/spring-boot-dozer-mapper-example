@@ -1,7 +1,8 @@
-package com.spring.crud.demo.controller;
+package com.spring.crud.demo.controller.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.spring.crud.demo.controller.EmployeeController;
 import com.spring.crud.demo.dto.emp.EmployeeDTO;
 import com.spring.crud.demo.dto.emp.PhoneNumberDTO;
 import com.spring.crud.demo.exception.InternalServerErrorException;
@@ -10,7 +11,7 @@ import com.spring.crud.demo.mapper.emp.EmployeeMapper;
 import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.model.emp.PhoneNumber;
 import com.spring.crud.demo.service.IEmployeeService;
-import com.spring.crud.demo.service.impl.EmployeeService;
+import com.spring.crud.demo.service.mock.EmployeeService;
 import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
