@@ -33,7 +33,7 @@ public class StudentController {
         if (studentList.isEmpty()) {
             throw new NotFoundException("No record found");
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(studentList.stream().map(studentMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(studentList.stream().map(studentMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -42,26 +42,17 @@ public class StudentController {
         if (optionalStudent.isEmpty()) {
             throw new NotFoundException("No record found with id " + id);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
+        return ResponseEntity.status(HttpStatus.OK).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
     }
 
-    @GetMapping(value = "/{rollNo}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<StudentDTO> findStudentByRollNo(@PathVariable int rollNo) {
-        Optional<Student> optionalStudent = studentService.findStudentByRollNo(rollNo);
-        if (optionalStudent.isEmpty()) {
-            throw new NotFoundException("No record found with rollNo " + rollNo);
-        }
-        return ResponseEntity.status(HttpStatus.FOUND).body(studentMapper.convertFromEntityToDto(optionalStudent.get()));
-    }
-
-    @GetMapping(value = "/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<List<StudentDTO>> findStudentsByExample(@RequestParam Map<String, Object> allRequestParams) {
+    @PostMapping(value = "/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<List<StudentDTO>> findStudentsByExample(@RequestBody Map<String, Object> allRequestParams) {
         StudentDTO studentDTO = objectMapper.convertValue(allRequestParams, StudentDTO.class);
         List<Student> studentList = studentService.findStudentsByExample(studentMapper.convertFromDtoToEntity(studentDTO));
         if (studentList.isEmpty()) {
             throw new NotFoundException("No record found with map " + allRequestParams);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(studentList.stream().map(studentMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(studentList.stream().map(studentMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
