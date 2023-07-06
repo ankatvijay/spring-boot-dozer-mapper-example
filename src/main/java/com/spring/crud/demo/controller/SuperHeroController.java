@@ -34,7 +34,7 @@ public class SuperHeroController {
         if (superHeroList.isEmpty()) {
             throw new NotFoundException("No record found");
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -43,17 +43,17 @@ public class SuperHeroController {
         if (optionalSuperHero.isEmpty()) {
             throw new NotFoundException("No record found with id " + id);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
+        return ResponseEntity.status(HttpStatus.OK).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
     }
 
-    @GetMapping(value = "/search", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<List<SuperHeroDTO>> findSuperHerosByExample(@RequestParam Map<String, Object> allRequestParams) {
+    @PostMapping(value = "/search", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<List<SuperHeroDTO>> findSuperHerosByExample(@RequestBody Map<String, Object> allRequestParams) {
         SuperHeroDTO superHeroDTO = objectMapper.convertValue(allRequestParams, SuperHeroDTO.class);
         List<SuperHero> superHeroList = superHeroService.findSuperHerosByExample(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
         if (superHeroList.isEmpty()) {
             throw new NotFoundException("No record found with map " + allRequestParams);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -89,5 +89,11 @@ public class SuperHeroController {
     @DeleteMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Boolean> deleteSuperHero(@PathVariable int id) {
         return ResponseEntity.ok().body(superHeroService.deleteSuperHero(id));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllSuperHero() {
+        superHeroService.deleteAllSuperHero();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

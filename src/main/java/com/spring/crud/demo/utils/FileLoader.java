@@ -19,8 +19,7 @@ public class FileLoader {
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try {
             return Paths.get(Objects.requireNonNull(classLoader.getResource(fileName)).toURI()).toFile();
-        } catch (URISyntaxException e) {
-            log.error("Failed to load file: '{}'. Check if the file exists and is placed in the 'resource' directory", fileName);
+        } catch (NullPointerException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
@@ -29,7 +28,6 @@ public class FileLoader {
         try {
             return new String(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
         } catch (IOException ioe) {
-            log.error("Failed to read file and convert to string : ", ioe);
             throw new RuntimeException(ioe);
         }
     }

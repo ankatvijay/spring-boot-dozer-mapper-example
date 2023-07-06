@@ -219,12 +219,10 @@ class SuperHeroRepositoryTest {
         // Given
         Integer id = RandomUtils.nextInt();
 
-        // When
-        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(EmptyResultDataAccessException.class, () -> superHeroRepository.deleteById(id));
-
-        // Then
-        Assertions.assertThat(exception).isInstanceOf(EmptyResultDataAccessException.class);
-        Assertions.assertThat(exception.getMessage()).isEqualTo(String.format("No class com.spring.crud.demo.model.SuperHero entity with id %d exists!", id));
+        // When & Then
+        Assertions.assertThatThrownBy(() -> superHeroRepository.deleteById(id))
+                .isInstanceOf(EmptyResultDataAccessException.class)
+                .hasMessage(String.format("No class com.spring.crud.demo.model.SuperHero entity with id %d exists!", id));
     }
 
     private static Stream<Arguments> generateExample() {

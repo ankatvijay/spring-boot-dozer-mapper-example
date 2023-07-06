@@ -33,7 +33,7 @@ public class EmployeeController {
         if (employeeList.isEmpty()) {
             throw new NotFoundException("No record found");
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(employeeList.stream().map(employeeMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(employeeList.stream().map(employeeMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -42,17 +42,17 @@ public class EmployeeController {
         if (optionalEmployee.isEmpty()) {
             throw new NotFoundException("No record found with id " + id);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(employeeMapper.convertFromEntityToDto(optionalEmployee.get()));
+        return ResponseEntity.status(HttpStatus.OK).body(employeeMapper.convertFromEntityToDto(optionalEmployee.get()));
     }
 
-    @GetMapping(value = "/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<List<EmployeeDTO>> findEmployeesByExample(@RequestParam Map<String, Object> allRequestParams) {
+    @PostMapping(value = "/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
+    public ResponseEntity<List<EmployeeDTO>> findEmployeesByExample(@RequestBody Map<String, Object> allRequestParams) {
         EmployeeDTO employeeDTO = objectMapper.convertValue(allRequestParams, EmployeeDTO.class);
         List<Employee> employeeList = employeeService.findEmployeesByExample(employeeMapper.convertFromDtoToEntity(employeeDTO));
         if (employeeList.isEmpty()) {
             throw new NotFoundException("No record found with map " + allRequestParams);
         }
-        return ResponseEntity.status(HttpStatus.FOUND).body(employeeList.stream().map(employeeMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(employeeList.stream().map(employeeMapper::convertFromEntityToDto).collect(Collectors.toList()));
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
@@ -78,6 +78,12 @@ public class EmployeeController {
     @DeleteMapping(value = "/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Boolean> deleteEmployee(@PathVariable int id) {
         return ResponseEntity.ok().body(employeeService.deleteEmployee(id));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllEmployee() {
+        employeeService.deleteAllEmployee();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }
 

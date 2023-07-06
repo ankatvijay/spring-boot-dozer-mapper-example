@@ -84,7 +84,7 @@ class EmployeeControllerTest {
         ResponseEntity<List<EmployeeDTO>> actualEmployees = employeeController.findAllEmployees();
 
         // Then
-        Assertions.assertThat(actualEmployees.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        Assertions.assertThat(actualEmployees.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualEmployees.getBody()).isNotNull();
         Assertions.assertThat(actualEmployees.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(actualEmployees.getBody())
@@ -134,7 +134,7 @@ class EmployeeControllerTest {
         ResponseEntity<EmployeeDTO> actualEmployee = employeeController.findEmployeeById(id);
 
         // Then
-        Assertions.assertThat(actualEmployee.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        Assertions.assertThat(actualEmployee.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualEmployee.getBody()).isNotNull();
         assertEmployee(expectedEmployee, actualEmployee.getBody());
         Mockito.verify(employeeService).findEmployeeById(id);
@@ -167,7 +167,7 @@ class EmployeeControllerTest {
         ResponseEntity<List<EmployeeDTO>> actualEmployees = employeeController.findEmployeesByExample(map);
 
         // Then
-        Assertions.assertThat(actualEmployees.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        Assertions.assertThat(actualEmployees.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualEmployees.getBody()).isNotNull();
         Assertions.assertThat(actualEmployees.getBody().size()).isGreaterThan(0);
         assertEmployee(expectedEmployee, actualEmployees.getBody().get(0));

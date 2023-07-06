@@ -70,7 +70,7 @@ class SuperHeroControllerTest {
         ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findAllSuperHeros();
 
         // Then
-        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualSuperHeros.getBody()).isNotNull();
         Assertions.assertThat(actualSuperHeros.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(actualSuperHeros.getBody())
@@ -110,7 +110,7 @@ class SuperHeroControllerTest {
         ResponseEntity<SuperHeroDTO> actualSuperHero = superHeroController.findSuperHeroById(id);
 
         // Then
-        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        Assertions.assertThat(actualSuperHero.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualSuperHero.getBody()).isNotNull();
         assertSuperHero(expectedSuperHero, actualSuperHero.getBody());
         Mockito.verify(superHeroService).findSuperHeroById(id);
@@ -143,7 +143,7 @@ class SuperHeroControllerTest {
         ResponseEntity<List<SuperHeroDTO>> actualSuperHeros = superHeroController.findSuperHerosByExample(map);
 
         // Then
-        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.FOUND);
+        Assertions.assertThat(actualSuperHeros.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualSuperHeros.getBody()).isNotNull();
         Assertions.assertThat(actualSuperHeros.getBody().size()).isGreaterThan(0);
         assertSuperHero(expectedSuperHero, actualSuperHeros.getBody().get(0));

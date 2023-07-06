@@ -1,6 +1,5 @@
 package com.spring.crud.demo.dto.emp;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import lombok.Data;
 import org.dozer.Mapping;
 

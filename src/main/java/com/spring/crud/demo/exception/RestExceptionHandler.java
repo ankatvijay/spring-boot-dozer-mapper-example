@@ -33,4 +33,9 @@ public class RestExceptionHandler {
         return new ErrorResponseDTO(HttpStatus.FOUND.value(), dateFormat.format(new Date(System.currentTimeMillis())), ex.getMessage());
     }
 
+    @ExceptionHandler(value = {NullPointerException.class})
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponseDTO foundNullPointerException(NullPointerException ex) {
+        return new ErrorResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), dateFormat.format(new Date(System.currentTimeMillis())), ex.getMessage());
+    }
 }

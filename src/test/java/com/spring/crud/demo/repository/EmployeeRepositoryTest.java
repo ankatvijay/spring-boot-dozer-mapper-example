@@ -7,7 +7,6 @@ import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.model.emp.PhoneNumber;
 import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
-import com.spring.crud.demo.utils.HelperUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
@@ -168,7 +167,7 @@ class EmployeeRepositoryTest {
         // Given
         List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         employeeRepository.saveAll(employees);
-        Tuple[] expectedTupleEmployees = HelperUtil.employeeSupplier.get().stream()
+        Tuple[] expectedTupleEmployees = employees.stream()
                 .filter(employee -> employee.getSpouse().equals(employeeExample.getProbe().getSpouse()))
                 .map(employee -> AssertionsForClassTypes.tuple(employee.getFirstName(),
                         employee.getLastName(),
@@ -296,12 +295,10 @@ class EmployeeRepositoryTest {
         // Given
         Integer id = RandomUtils.nextInt();
 
-        // When
-        Exception exception = org.junit.jupiter.api.Assertions.assertThrows(EmptyResultDataAccessException.class, () -> employeeRepository.deleteById(id));
-
-        // Then
-        Assertions.assertThat(exception).isInstanceOf(EmptyResultDataAccessException.class);
-        Assertions.assertThat(exception.getMessage()).isEqualTo(String.format("No class com.spring.crud.demo.model.emp.Employee entity with id %d exists!", id));
+        // When & Then
+        Assertions.assertThatThrownBy(() -> employeeRepository.deleteById(id))
+                .isInstanceOf(EmptyResultDataAccessException.class)
+                .hasMessage(String.format("No class com.spring.crud.demo.model.emp.Employee entity with id %d exists!", id));
     }
 
     private static Stream<Arguments> generateExample() {

@@ -77,7 +77,13 @@ public class StudentController {
 
     @DeleteMapping(value = "/{id}", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     public ResponseEntity<Boolean> deleteStudent(@PathVariable int id) {
-        return ResponseEntity.ok().body(studentService.deleteStudent(id));
+        return ResponseEntity.status(HttpStatus.OK).body(studentService.deleteStudent(id));
+    }
+
+    @DeleteMapping
+    public ResponseEntity<Void> deleteAllStudent() {
+        studentService.deleteAllStudent();
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 }
 

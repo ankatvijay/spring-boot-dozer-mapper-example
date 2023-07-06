@@ -1,8 +1,11 @@
 package com.spring.crud.demo;
 
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.Test;
 
-@SpringBootTest
 class SpringBootH2CRUDApplicationTest {
 
+    @Test
+    void testSpringBootH2CRUDApplication_Main(){
+        SpringBootH2CRUDApplication.main(new String[]{});
+    }
 }

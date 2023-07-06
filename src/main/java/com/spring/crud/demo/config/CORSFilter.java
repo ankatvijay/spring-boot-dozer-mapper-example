@@ -31,10 +31,4 @@ public class CORSFilter implements Filter {
         response.setHeader("Access-Control-Expose-Headers", "Location");
         filterChain.doFilter(servletRequest, servletResponse);
     }
-
-    @Override
-    public void destroy() {
-
-    }
-
 }

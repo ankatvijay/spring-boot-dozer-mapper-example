@@ -14,11 +14,6 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication
 @EnableJpaRepositories
 public class SpringBootH2CRUDApplication {
-	//private final StudentRepository studentRepository;
-
-	//private final SuperHeroRepository superHeroRepository;
-
-	//private final EmployeeRepository employeeRepository;
 
 	public static void main(String[] args) {
 		SpringApplication.run(SpringBootH2CRUDApplication.class, args);

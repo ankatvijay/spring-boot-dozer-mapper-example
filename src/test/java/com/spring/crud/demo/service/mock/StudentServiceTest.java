@@ -8,7 +8,6 @@ import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.Student;
 import com.spring.crud.demo.repository.StudentRepository;
 import com.spring.crud.demo.utils.FileLoader;
-import com.spring.crud.demo.utils.HelperUtil;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
@@ -59,7 +58,7 @@ class StudentServiceTest {
         // Given
 
         // When
-        Mockito.when(studentRepository.findAll()).thenReturn(HelperUtil.studentSupplier.get());
+        Mockito.when(studentRepository.findAll()).thenReturn(students);
         List<Student> students = studentService.findAllStudents();
 
         // Then
