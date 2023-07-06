@@ -1,4 +1,4 @@
-package com.spring.crud.demo.service.mock;
+package com.spring.crud.demo.service.impl;
 
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
