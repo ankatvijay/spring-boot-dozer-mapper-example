@@ -2,79 +2,79 @@ package com.spring.crud.demo.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.SuperHeroDTO;
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
-import com.spring.crud.demo.mapper.SuperHeroMapper;
+import com.spring.crud.demo.mapper.BaseMapper;
 import com.spring.crud.demo.model.SuperHero;
-import com.spring.crud.demo.service.ISuperHeroService;
+import com.spring.crud.demo.service.SuperHeroService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @RequestMapping("/super-heroes")
 @RestController(value = "superHeroController")
-public class SuperHeroController {
+public class SuperHeroController implements BaseController<SuperHeroDTO> {
 
-    private final ISuperHeroService superHeroService;
-    private final SuperHeroMapper superHeroMapper;
+    private final SuperHeroService superHeroService;
+    private final BaseMapper<SuperHero, SuperHeroDTO> superHeroMapper;
     private final ObjectMapper objectMapper;
 
-    @GetMapping(produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<List<SuperHeroDTO>> findAllSuperHeros() {
-        List<SuperHero> superHeroList = superHeroService.findAllSuperHeros();
+    @Override
+    public ResponseEntity<List<SuperHeroDTO>> getAllRecords() {
+        List<SuperHero> superHeroList = superHeroService.getAllRecords();
         if (superHeroList.isEmpty()) {
             throw new NotFoundException("No record found");
         }
-        return ResponseEntity.status(HttpStatus.OK).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).toList());
     }
 
-    @GetMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<SuperHeroDTO> findSuperHeroById(@PathVariable int id) {
-        Optional<SuperHero> optionalSuperHero = superHeroService.findSuperHeroById(id);
+    @Override
+    public ResponseEntity<SuperHeroDTO> getRecordsById(Integer id) {
+        Optional<SuperHero> optionalSuperHero = superHeroService.getRecordsById(id);
         if (optionalSuperHero.isEmpty()) {
             throw new NotFoundException("No record found with id " + id);
         }
         return ResponseEntity.status(HttpStatus.OK).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
     }
 
-    @PostMapping(value = "/search", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<List<SuperHeroDTO>> findSuperHerosByExample(@RequestBody Map<String, Object> allRequestParams) {
+    @Override
+    public ResponseEntity<List<SuperHeroDTO>> getAllRecordsByExample(SuperHeroDTO allRequestParams) {
         SuperHeroDTO superHeroDTO = objectMapper.convertValue(allRequestParams, SuperHeroDTO.class);
-        List<SuperHero> superHeroList = superHeroService.findSuperHerosByExample(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
+        List<SuperHero> superHeroList = superHeroService.getAllRecordsByExample(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
         if (superHeroList.isEmpty()) {
             throw new NotFoundException("No record found with map " + allRequestParams);
         }
-        return ResponseEntity.status(HttpStatus.OK).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).collect(Collectors.toList()));
+        return ResponseEntity.status(HttpStatus.OK).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).toList());
     }
 
-    @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<SuperHeroDTO> saveSuperHero(@RequestBody SuperHeroDTO superHeroDTO) {
-        Optional<SuperHero> optionalSuperHero = superHeroService.saveSuperHero(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
+    @Override
+    public ResponseEntity<SuperHeroDTO> insertRecord(@RequestBody SuperHeroDTO superHeroDTO) {
+        Optional<SuperHero> optionalSuperHero = superHeroService.insertRecord(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
         if (optionalSuperHero.isEmpty()) {
             throw new InternalServerErrorException("Something went wrong");
         }
         return ResponseEntity.status(HttpStatus.CREATED).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
     }
 
-    @PutMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<SuperHeroDTO> updateSuperHero(@PathVariable int id, @RequestBody SuperHeroDTO superHeroDTO) {
-        Optional<SuperHero> optionalSuperHero = superHeroService.updateSuperHero(id, superHeroMapper.convertFromDtoToEntity(superHeroDTO));
+    @Override
+    public ResponseEntity<SuperHeroDTO> updateRecord(Integer id, SuperHeroDTO superHeroDTO) {
+        Optional<SuperHero> optionalSuperHero = superHeroService.updateRecord(id, superHeroMapper.convertFromDtoToEntity(superHeroDTO));
         if (optionalSuperHero.isEmpty()) {
             throw new InternalServerErrorException("Something went wrong");
         }
         return ResponseEntity.status(HttpStatus.ACCEPTED).body(superHeroMapper.convertFromEntityToDto(optionalSuperHero.get()));
         /*
         try {
-            Optional<SuperHero> optionalSuperHero = superHeroService.updateSuperHero(id, superHeroMapper.convertFromDtoToEntity(superHeroDTO));
+            Optional<SuperHero> optionalSuperHero = superHeroService.updateRecord(id, superHeroMapper.convertFromDtoToEntity(superHeroDTO));
             URI uri = ServletUriComponentsBuilder.fromCurrentContextPath()
                     .path("/{id}")
                     .buildAndExpand(optionalSuperHero.get().getId())
@@ -86,14 +86,17 @@ public class SuperHeroController {
         */
     }
 
-    @DeleteMapping(value = "/{id}", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    public ResponseEntity<Boolean> deleteSuperHero(@PathVariable int id) {
-        return ResponseEntity.ok().body(superHeroService.deleteSuperHero(id));
+    @Override
+    public ResponseEntity<ResponseDTO> deleteRecordById(Integer id) {
+        if(!superHeroService.deleteRecordById(id)){
+            throw new NotFoundException("No record found with id "+id);
+        }
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseDTO.builder().status(HttpStatus.ACCEPTED.value()).currentDateTime(String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis())).message("Record deleted with id "+id).build());
     }
 
-    @DeleteMapping
-    public ResponseEntity<Void> deleteAllSuperHero() {
-        superHeroService.deleteAllSuperHero();
+    @Override
+    public ResponseEntity<Void> deleteAllRecords() {
+        superHeroService.deleteAllRecords();
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 }

@@ -1,11 +1,10 @@
-package com.spring.crud.demo.service.impl;
+package com.spring.crud.demo.service;
 
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.repository.EmployeeRepository;
-import com.spring.crud.demo.service.IEmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -18,17 +17,17 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service(value = "employeeService")
-public class EmployeeService implements IEmployeeService {
+public class EmployeeService implements BaseService<Employee> {
 
     private final EmployeeRepository employeeRepository;
 
     @Override
-    public List<Employee> findAllEmployees() {
+    public List<Employee> getAllRecords() {
         return employeeRepository.findAll();
     }
 
     @Override
-    public Optional<Employee> findEmployeeById(int id) {
+    public Optional<Employee> getRecordsById(int id) {
         Optional<Employee> optionalEmployee = employeeRepository.findById(id);
         if (optionalEmployee.isEmpty()) {
             throw new NotFoundException("No record found with id " + id);
@@ -37,31 +36,36 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
-    public boolean existsByEmployeeId(int id) {
+    public boolean existRecordById(int id) {
         return employeeRepository.existsById(id);
     }
 
     @Override
-    public List<Employee> findEmployeesByExample(Employee employee) {
+    public List<Employee> getAllRecordsByExample(Employee employee) {
         Example<Employee> employeeExample = Example.of(employee, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
         return employeeRepository.findAll(employeeExample);
     }
 
     @Transactional
     @Override
-    public Optional<Employee> saveEmployee(Employee employee) {
+    public Optional<Employee> insertRecord(Employee employee) {
         if (Objects.nonNull(employee) && Objects.nonNull(employee.getId()) && employeeRepository.existsById(employee.getId())) {
             throw new RecordFoundException("Record already found with id " + employee.getId());
         }
         return Optional.of(employeeRepository.save(employee));
     }
 
+    @Override
+    public List<Employee> insertBulkRecords(Iterable<Employee> employees) {
+        return employeeRepository.saveAll(employees);
+    }
+
     @Transactional
     @Override
-    public Optional<Employee> updateEmployee(int id, Employee employee) {
+    public Optional<Employee> updateRecord(int id, Employee employee) {
         if (id > 0 && Objects.nonNull(employee) && Objects.nonNull(employee.getId())) {
             if (id == employee.getId()) {
-                if (employeeRepository.existsById(id)) {
+                if (existRecordById(id)) {
                     return Optional.of(employeeRepository.save(employee));
                 }
                 throw new NotFoundException("No record found with id " + id);
@@ -75,8 +79,8 @@ public class EmployeeService implements IEmployeeService {
 
     @Transactional
     @Override
-    public boolean deleteEmployee(int id) {
-        if (existsByEmployeeId(id)) {
+    public boolean deleteRecordById(int id) {
+        if (existRecordById(id)) {
             employeeRepository.deleteById(id);
             return Boolean.TRUE;
         } else {
@@ -85,7 +89,7 @@ public class EmployeeService implements IEmployeeService {
     }
 
     @Override
-    public void deleteAllEmployee() {
+    public void deleteAllRecords() {
         employeeRepository.deleteAll();
     }
 }

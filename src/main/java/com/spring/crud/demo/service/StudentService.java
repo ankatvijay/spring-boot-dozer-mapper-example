@@ -1,11 +1,10 @@
-package com.spring.crud.demo.service.mock;
+package com.spring.crud.demo.service;
 
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.Student;
 import com.spring.crud.demo.repository.StudentRepository;
-import com.spring.crud.demo.service.IStudentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -17,17 +16,17 @@ import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service(value = "studentService")
-public class StudentService implements IStudentService {
+public class StudentService implements BaseService<Student> {
 
     private final StudentRepository studentRepository;
 
     @Override
-    public List<Student> findAllStudents() {
+    public List<Student> getAllRecords() {
         return studentRepository.findAll();
     }
 
     @Override
-    public Optional<Student> findStudentById(int id) {
+    public Optional<Student> getRecordsById(int id) {
         Optional<Student> optionalStudent = studentRepository.findById(id);
         if (optionalStudent.isEmpty()) {
             throw new NotFoundException("No record found with id " + id);
@@ -36,27 +35,18 @@ public class StudentService implements IStudentService {
     }
 
     @Override
-    public Optional<Student> findStudentByRollNo(int rollNo) {
-        Optional<Student> optionalStudent = studentRepository.findByRollNo(rollNo);
-        if (optionalStudent.isEmpty()) {
-            throw new NotFoundException("No record found with rollNo " + rollNo);
-        }
-        return optionalStudent;
-    }
-
-    @Override
-    public boolean existsByStudentId(int id) {
+    public boolean existRecordById(int id) {
         return studentRepository.existsById(id);
     }
 
     @Override
-    public List<Student> findStudentsByExample(Student student) {
+    public List<Student> getAllRecordsByExample(Student student) {
         Example<Student> studentExample = Example.of(student, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
         return studentRepository.findAll(studentExample);
     }
 
     @Override
-    public Optional<Student> saveStudent(Student student) {
+    public Optional<Student> insertRecord(Student student) {
         if (Objects.nonNull(student) && Objects.nonNull(student.getId()) && studentRepository.existsById(student.getId())) {
             throw new RecordFoundException("Record already found with id " + student.getId());
         }
@@ -64,10 +54,15 @@ public class StudentService implements IStudentService {
     }
 
     @Override
-    public Optional<Student> updateStudent(int id, Student student) {
+    public List<Student> insertBulkRecords(Iterable<Student> students) {
+        return studentRepository.saveAll(students);
+    }
+
+    @Override
+    public Optional<Student> updateRecord(int id, Student student) {
         if (id > 0 && Objects.nonNull(student) && Objects.nonNull(student.getId())) {
             if (id == student.getId()) {
-                if (studentRepository.existsById(id)) {
+                if (existRecordById(id)) {
                     return Optional.of(studentRepository.save(student));
                 }
                 throw new NotFoundException("No record found with id " + id);
@@ -80,8 +75,8 @@ public class StudentService implements IStudentService {
     }
 
     @Override
-    public boolean deleteStudent(int id) {
-        if (existsByStudentId(id)) {
+    public boolean deleteRecordById(int id) {
+        if (existRecordById(id)) {
             studentRepository.deleteById(id);
             return Boolean.TRUE;
         } else {
@@ -90,7 +85,7 @@ public class StudentService implements IStudentService {
     }
 
     @Override
-    public void deleteAllStudent() {
+    public void deleteAllRecords() {
         studentRepository.deleteAll();
     }
 

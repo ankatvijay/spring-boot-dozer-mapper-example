@@ -2,8 +2,11 @@ package com.spring.crud.demo.controller.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.spring.crud.demo.dto.ErrorResponseDTO;
+import com.spring.crud.demo.controller.BaseControllerTest;
+import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.StudentDTO;
+import com.spring.crud.demo.model.Student;
+import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -22,12 +25,14 @@ import org.springframework.http.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class StudentControllerIT {
+public class StudentControllerIT implements BaseControllerTest<StudentDTO, StudentDTO> {
 
     @LocalServerPort
     private int port;
@@ -49,11 +54,12 @@ public class StudentControllerIT {
     @BeforeEach
     public void setUp() {
         url = String.format("http://localhost:%d", port);
-        restTemplate.delete(url + "/students" );
+        restTemplate.delete(url + "/students");
     }
 
     @Test
-    void testGivenNon_WhenFindAllStudents_ThenReturnAllRecord() throws IOException {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
         // Given
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
         students.forEach(s -> restTemplate.postForEntity(url + "/students", s, StudentDTO.class));
@@ -86,12 +92,13 @@ public class StudentControllerIT {
     }
 
     @Test
-    void testGivenNon_WhenFindAllStudents_ThenReturnError() {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenThrowException() {
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/students", HttpMethod.GET, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students", HttpMethod.GET, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -101,11 +108,12 @@ public class StudentControllerIT {
     }
 
     @Test
-    void testGivenId_WhenFindStudentById_ThenReturnRecord() throws IOException {
+    @Override
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
         // Given
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
-        StudentDTO saveStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
-        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", saveStudent, StudentDTO.class).getBody();
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", insertRecord, StudentDTO.class).getBody();
 
         // When
         HttpHeaders headers = new HttpHeaders();
@@ -117,11 +125,12 @@ public class StudentControllerIT {
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().getId()).isEqualTo(expectedStudent.getId());
-        assertStudent(expectedStudent, responseEntity.getBody());
+        assertRecord(expectedStudent, responseEntity.getBody());
     }
 
     @Test
-    void testGivenRandomId_WhenFindStudentById_ThenReturnRecord() {
+    @Override
+    public void testGivenRandomId_WhenGetRecordsById_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -129,7 +138,7 @@ public class StudentControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + id, HttpMethod.GET, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + id, HttpMethod.GET, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -139,11 +148,12 @@ public class StudentControllerIT {
     }
 
     @Test
-    void testGivenStudent_WhenFindStudentsByExample_ThenReturnRecords() throws IOException {
+    @Override
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
         // Given
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
-        StudentDTO saveStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
-        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", saveStudent, StudentDTO.class).getBody();
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", insertRecord, StudentDTO.class).getBody();
         Map<String, Object> map = new ObjectMapper().convertValue(expectedStudent, Map.class);
 
         // When
@@ -158,21 +168,21 @@ public class StudentControllerIT {
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(responseEntity.getBody().get(0).getId()).isEqualTo(expectedStudent.getId());
-        assertStudent(expectedStudent, responseEntity.getBody().get(0));
+        assertRecord(expectedStudent, responseEntity.getBody().get(0));
     }
 
     @Test
-    void testGivenRandomStudent_WhenFindStudentsByExample_ThenReturnError() throws IOException {
+    @Override
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
         // Given
-        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
-        StudentDTO saveStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
-        Map<String, Object> map = objectMapper.convertValue(saveStudent, Map.class);
+        Student expectedStudent = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
+        StudentDTO map = objectMapper.convertValue(expectedStudent, StudentDTO.class);
 
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map> entity = new HttpEntity<Map>(map, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/students/search", HttpMethod.POST, entity, ErrorResponseDTO.class);
+        HttpEntity<StudentDTO> entity = new HttpEntity<StudentDTO>(map, headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students/search", HttpMethod.POST, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -182,7 +192,8 @@ public class StudentControllerIT {
     }
 
     @Test
-    void testGivenStudent_WhenSaveStudent_ThenReturnNewStudent() throws IOException {
+    @Override
+    public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws IOException {
         // Given
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
         StudentDTO expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
@@ -196,21 +207,22 @@ public class StudentControllerIT {
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        assertStudent(expectedStudent, responseEntity.getBody());
+        assertRecord(expectedStudent, responseEntity.getBody());
     }
 
     @Test
-    void testGivenSavedStudent_WhenSaveStudent_ThenReturnError() throws IOException {
+    @Override
+    public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() throws IOException {
         // Given
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
-        StudentDTO saveStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
-        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", saveStudent, StudentDTO.class).getBody();
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", insertRecord, StudentDTO.class).getBody();
 
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<StudentDTO> entity = new HttpEntity<StudentDTO>(expectedStudent, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/students", HttpMethod.POST, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students", HttpMethod.POST, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
@@ -220,11 +232,12 @@ public class StudentControllerIT {
     }
 
     @Test
-    void testGivenExistingStudent_WhenUpdateStudent_ThenReturnUpdatedStudent() throws IOException {
+    @Override
+    public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
         // Given
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
-        StudentDTO saveStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
-        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", saveStudent, StudentDTO.class).getBody();
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = restTemplate.postForEntity(url + "/students", insertRecord, StudentDTO.class).getBody();
 
         // When
         expectedStudent.setMarks(800.f);
@@ -237,30 +250,12 @@ public class StudentControllerIT {
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().getId()).isEqualTo(expectedStudent.getId());
-        assertStudent(expectedStudent, responseEntity.getBody());
+        assertRecord(expectedStudent, responseEntity.getBody());
     }
 
     @Test
-    void testGivenNull_WhenUpdateStudent_ThenThrowError() throws IOException {
-        // Given
-        StudentDTO student = new StudentDTO();
-        student.setId(1);
-
-        // When
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<StudentDTO> entity = new HttpEntity<StudentDTO>(student, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + student.getId(), HttpMethod.PUT, entity, ErrorResponseDTO.class);
-
-        // Then
-        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + student.getId());
-    }
-
-    @Test
-    void testGivenNull_WhenUpdateStudent_ThenThrowError1() throws IOException {
+    @Override
+    public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
         StudentDTO student = new StudentDTO();
@@ -270,7 +265,7 @@ public class StudentControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<StudentDTO> entity = new HttpEntity<StudentDTO>(student, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + id, HttpMethod.PUT, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + id, HttpMethod.PUT, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -280,7 +275,27 @@ public class StudentControllerIT {
     }
 
     @Test
-    void testGivenNull_WhenUpdateStudent_ThenThrowError2() throws IOException {
+    void testGivenRandomIdAndRandomRecord_WhenUpdateRecord_ThenThrowException() {
+        // Given
+        StudentDTO student = new StudentDTO();
+        student.setId(1);
+
+        // When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<StudentDTO> entity = new HttpEntity<StudentDTO>(student, headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + student.getId(), HttpMethod.PUT, entity, ResponseDTO.class);
+
+        // Then
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(responseEntity.getBody()).isNotNull();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + student.getId());
+    }
+
+
+    @Test
+    void testGivenRandomIdAndExistingRecordWithoutId_WhenUpdateRecord_ThenThrowException() throws IOException {
         // Given
         int id = RandomUtils.nextInt();
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
@@ -290,7 +305,7 @@ public class StudentControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<StudentDTO> entity = new HttpEntity<StudentDTO>(expectedStudent, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/students/"+id, HttpMethod.PUT, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + id, HttpMethod.PUT, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -300,7 +315,8 @@ public class StudentControllerIT {
     }
 
     @Test
-    void testGiveId_WhenDeleteStudent_ThenReturnTrue() throws IOException {
+    @Override
+    public void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
         List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
         StudentDTO student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
@@ -310,16 +326,18 @@ public class StudentControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<Boolean> responseEntity = restTemplate.exchange(url + "/students/" + savedStudent.getId(), HttpMethod.DELETE, entity, Boolean.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + savedStudent.getId(), HttpMethod.DELETE, entity, ResponseDTO.class);
 
         // Then
-        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody()).isTrue();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Record deleted with id " + savedStudent.getId());
     }
 
     @Test
-    void testGiveRandomId_WhenDeleteStudent_ThenReturnFalse() {
+    @Override
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -327,20 +345,34 @@ public class StudentControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<Boolean> responseEntity = restTemplate.exchange(url + "/students/" + id, HttpMethod.DELETE, entity, Boolean.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students/" + id, HttpMethod.DELETE, entity, ResponseDTO.class);
+
+        // Then
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(responseEntity.getBody()).isNotNull();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + id);
+    }
+
+    @Test
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
+        // Given & When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/students", HttpMethod.DELETE, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody()).isFalse();
     }
 
-    private void assertStudent(StudentDTO expectedStudent, StudentDTO actualStudent) {
-        Assertions.assertThat(actualStudent).isNotNull();
-        Assertions.assertThat(actualStudent.getRollNo()).isEqualTo(expectedStudent.getRollNo());
-        Assertions.assertThat(actualStudent.getFirstName()).isEqualTo(expectedStudent.getFirstName());
-        Assertions.assertThat(actualStudent.getLastName()).isEqualTo(expectedStudent.getLastName());
-        Assertions.assertThat(actualStudent.getDateOfBirth()).isEqualTo(expectedStudent.getDateOfBirth());
-        Assertions.assertThat(actualStudent.getMarks()).isEqualTo(expectedStudent.getMarks());
+    public void assertRecord(StudentDTO expectedRecord, StudentDTO actualRecord) {
+        Assertions.assertThat(actualRecord).isNotNull();
+        Assertions.assertThat(actualRecord.getRollNo()).isEqualTo(expectedRecord.getRollNo());
+        Assertions.assertThat(actualRecord.getFirstName()).isEqualTo(expectedRecord.getFirstName());
+        Assertions.assertThat(actualRecord.getLastName()).isEqualTo(expectedRecord.getLastName());
+        Assertions.assertThat(actualRecord.getDateOfBirth()).isEqualTo(expectedRecord.getDateOfBirth());
+        Assertions.assertThat(actualRecord.getMarks()).isEqualTo(expectedRecord.getMarks());
     }
 }

@@ -1,28 +1,24 @@
-package com.spring.crud.demo.mapper.emp;
+package com.spring.crud.demo.mapper;
 
 import com.spring.crud.demo.dto.emp.EmployeeDTO;
 import com.spring.crud.demo.model.emp.Employee;
-import com.spring.crud.demo.utils.Constant;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.dozer.DozerBeanMapper;
 import org.springframework.stereotype.Component;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
-@Data
 @RequiredArgsConstructor
 @Component(value = "employeeMapper")
-public class EmployeeMapper implements Serializable {
+public class EmployeeMapper implements BaseMapper<Employee, EmployeeDTO> {
 
     private final DozerBeanMapper dozerBeanMapper;
 
+    @Override
     public Employee convertFromDtoToEntity(EmployeeDTO employeeDTO) {
         Employee employee = dozerBeanMapper.map(employeeDTO, Employee.class);
-        employee.setDateOfJoining(employeeDTO.getDateOfJoining() != null ? LocalDateTime.parse(employeeDTO.getDateOfJoining(), DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)) : null);
+        employee.setDateOfJoining(employeeDTO.getDateOfJoining() != null ? LocalDateTime.parse(employeeDTO.getDateOfJoining(), dateTimeFormatter) : null);
         if(Objects.nonNull(employee.getAddress())){
             employee.getAddress().setEmployee(employee);
         }
@@ -32,9 +28,10 @@ public class EmployeeMapper implements Serializable {
         return employee;
     }
 
+    @Override
     public EmployeeDTO convertFromEntityToDto(Employee employee) {
         EmployeeDTO employeeDTO = dozerBeanMapper.map(employee, EmployeeDTO.class);
-        employeeDTO.setDateOfJoining(employee.getDateOfJoining() != null ? employee.getDateOfJoining().format(DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)) : null);
+        employeeDTO.setDateOfJoining(employee.getDateOfJoining() != null ? employee.getDateOfJoining().format(dateTimeFormatter) : null);
         return employeeDTO;
     }
 }

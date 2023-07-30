@@ -2,9 +2,11 @@ package com.spring.crud.demo.controller.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.spring.crud.demo.dto.ErrorResponseDTO;
+import com.spring.crud.demo.controller.BaseControllerTest;
+import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.emp.EmployeeDTO;
 import com.spring.crud.demo.dto.emp.PhoneNumberDTO;
+import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.utils.FileLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -28,7 +30,7 @@ import java.util.Map;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class EmployeeControllerIT {
+public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, EmployeeDTO> {
 
     @LocalServerPort
     private int port;
@@ -50,11 +52,12 @@ public class EmployeeControllerIT {
     @BeforeEach
     public void setUp() {
         url = String.format("http://localhost:%d", port);
-        restTemplate.delete(url + "/employees" );
+        restTemplate.delete(url + "/employees");
     }
 
     @Test
-    void testGivenNon_WhenFindAllEmployees_ThenReturnAllRecord() throws IOException {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
         employees.forEach(s -> restTemplate.postForEntity(url + "/employees", s, EmployeeDTO.class));
@@ -108,12 +111,13 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void testGivenNon_WhenFindAllEmployees_ThenReturnError() {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenThrowException() {
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/employees", HttpMethod.GET, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees", HttpMethod.GET, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -123,7 +127,8 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void testGivenId_WhenFindEmployeeById_ThenReturnRecord() throws IOException {
+    @Override
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
         EmployeeDTO saveEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
@@ -141,11 +146,12 @@ public class EmployeeControllerIT {
         Assertions.assertThat(responseEntity.getBody().getId()).isEqualTo(expectedEmployee.getId());
         Assertions.assertThat(responseEntity.getBody().getAddress().getId()).isEqualTo(expectedEmployee.getAddress().getId());
         Assertions.assertThat(responseEntity.getBody().getPhoneNumbers().get(0).getId()).isEqualTo(expectedEmployee.getPhoneNumbers().get(0).getId());
-        assertEmployee(expectedEmployee, responseEntity.getBody());
+        assertRecord(expectedEmployee, responseEntity.getBody());
     }
 
     @Test
-    void testGivenRandomId_WhenFindEmployeeById_ThenReturnRecord() {
+    @Override
+    public void testGivenRandomId_WhenGetRecordsById_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -153,7 +159,7 @@ public class EmployeeControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + id, HttpMethod.GET, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + id, HttpMethod.GET, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -163,12 +169,13 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void testGivenEmployee_WhenFindEmployeesByExample_ThenReturnRecords() throws IOException {
+    @Override
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
         EmployeeDTO saveEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
         EmployeeDTO expectedEmployee = restTemplate.postForEntity(url + "/employees", saveEmployee, EmployeeDTO.class).getBody();
-        EmployeeDTO searchEmployee = objectMapper.convertValue(expectedEmployee,EmployeeDTO.class);
+        EmployeeDTO searchEmployee = objectMapper.convertValue(expectedEmployee, EmployeeDTO.class);
         searchEmployee.setAddress(null);
         searchEmployee.setPhoneNumbers(null);
         Map<String, Object> map = new ObjectMapper().convertValue(searchEmployee, Map.class);
@@ -185,23 +192,28 @@ public class EmployeeControllerIT {
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(responseEntity.getBody().get(0).getId()).isEqualTo(expectedEmployee.getId());
-        assertEmployee(expectedEmployee, responseEntity.getBody().get(0));
+        assertRecord(expectedEmployee, responseEntity.getBody().get(0));
     }
 
     @Test
-    void testGivenRandomEmployee_WhenFindEmployeesByExample_ThenReturnError() throws IOException {
+    @Override
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
         // Given
-        List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
-        EmployeeDTO saveEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
-        saveEmployee.setAddress(null);
-        saveEmployee.setPhoneNumbers(null);
-        Map<String, Object> map = objectMapper.convertValue(saveEmployee, Map.class);
+        Employee expectedEmployee = new Employee();
+        expectedEmployee.setFirstName("Rahul");
+        expectedEmployee.setLastName("Ghadage");
+        expectedEmployee.setNoOfChildrens(0);
+        expectedEmployee.setAge(28);
+        expectedEmployee.setSpouse(true);
+        expectedEmployee.setAddress(null);
+        expectedEmployee.setPhoneNumbers(null);
+        EmployeeDTO map = objectMapper.convertValue(expectedEmployee, EmployeeDTO.class);
 
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map> entity = new HttpEntity<Map>(map, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/search", HttpMethod.POST, entity, ErrorResponseDTO.class);
+        HttpEntity<EmployeeDTO> entity = new HttpEntity<EmployeeDTO>(map, headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/search", HttpMethod.POST, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -211,7 +223,8 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void testGivenEmployee_WhenSaveEmployee_ThenReturnNewEmployee() throws IOException {
+    @Override
+    public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws IOException {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
         EmployeeDTO expectedEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
@@ -225,11 +238,12 @@ public class EmployeeControllerIT {
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        assertEmployee(expectedEmployee, responseEntity.getBody());
+        assertRecord(expectedEmployee, responseEntity.getBody());
     }
 
     @Test
-    void testGivenSavedEmployee_WhenSaveEmployee_ThenReturnError() throws IOException {
+    @Override
+    public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() throws IOException {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
         EmployeeDTO saveEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
@@ -239,7 +253,7 @@ public class EmployeeControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<EmployeeDTO> entity = new HttpEntity<EmployeeDTO>(expectedEmployee, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/employees", HttpMethod.POST, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees", HttpMethod.POST, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
@@ -249,7 +263,8 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void testGivenExistingEmployee_WhenUpdateEmployee_ThenReturnUpdatedEmployee() throws IOException {
+    @Override
+    public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
         EmployeeDTO saveEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
@@ -268,30 +283,12 @@ public class EmployeeControllerIT {
         Assertions.assertThat(responseEntity.getBody().getId()).isEqualTo(expectedEmployee.getId());
         Assertions.assertThat(responseEntity.getBody().getAddress().getId()).isEqualTo(expectedEmployee.getAddress().getId());
         Assertions.assertThat(responseEntity.getBody().getPhoneNumbers().get(0).getId()).isEqualTo(expectedEmployee.getPhoneNumbers().get(0).getId());
-        assertEmployee(expectedEmployee, responseEntity.getBody());
+        assertRecord(expectedEmployee, responseEntity.getBody());
     }
 
     @Test
-    void testGivenNull_WhenUpdateEmployee_ThenThrowError() throws IOException {
-        // Given
-        EmployeeDTO employee = new EmployeeDTO();
-        employee.setId(1);
-
-        // When
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<EmployeeDTO> entity = new HttpEntity<EmployeeDTO>(employee, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + employee.getId(), HttpMethod.PUT, entity, ErrorResponseDTO.class);
-
-        // Then
-        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + employee.getId());
-    }
-
-    @Test
-    void testGivenNull_WhenUpdateEmployee_ThenThrowError1() throws IOException {
+    @Override
+    public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
         EmployeeDTO employee = new EmployeeDTO();
@@ -301,7 +298,7 @@ public class EmployeeControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<EmployeeDTO> entity = new HttpEntity<EmployeeDTO>(employee, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + id, HttpMethod.PUT, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + id, HttpMethod.PUT, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -311,7 +308,26 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void testGivenNull_WhenUpdateEmployee_ThenThrowError2() throws IOException {
+    void testGivenRandomIdAndRandomRecord_WhenUpdateRecord_ThenThrowException() {
+        // Given
+        EmployeeDTO employee = new EmployeeDTO();
+        employee.setId(1);
+
+        // When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<EmployeeDTO> entity = new HttpEntity<EmployeeDTO>(employee, headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + employee.getId(), HttpMethod.PUT, entity, ResponseDTO.class);
+
+        // Then
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(responseEntity.getBody()).isNotNull();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + employee.getId());
+    }
+
+    @Test
+    void testGivenRandomIdAndExistingRecordWithoutId_WhenUpdateRecord_ThenThrowException() throws IOException {
         // Given
         int id = RandomUtils.nextInt();
         List<EmployeeDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
@@ -321,7 +337,7 @@ public class EmployeeControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<EmployeeDTO> entity = new HttpEntity<EmployeeDTO>(expectedEmployee, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/"+id, HttpMethod.PUT, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + id, HttpMethod.PUT, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -331,7 +347,8 @@ public class EmployeeControllerIT {
     }
 
     @Test
-    void testGiveId_WhenDeleteEmployee_ThenReturnTrue() throws IOException {
+    @Override
+    public void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
         EmployeeDTO employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
@@ -341,16 +358,18 @@ public class EmployeeControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<Boolean> responseEntity = restTemplate.exchange(url + "/employees/" + savedEmployee.getId(), HttpMethod.DELETE, entity, Boolean.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + savedEmployee.getId(), HttpMethod.DELETE, entity, ResponseDTO.class);
 
         // Then
-        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody()).isTrue();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Record deleted with id " + savedEmployee.getId());
     }
 
     @Test
-    void testGiveRandomId_WhenDeleteEmployee_ThenReturnFalse() {
+    @Override
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -358,29 +377,43 @@ public class EmployeeControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<Boolean> responseEntity = restTemplate.exchange(url + "/employees/" + id, HttpMethod.DELETE, entity, Boolean.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees/" + id, HttpMethod.DELETE, entity, ResponseDTO.class);
+
+        // Then
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(responseEntity.getBody()).isNotNull();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + id);
+    }
+
+    @Test
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
+        // Given & When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/employees", HttpMethod.DELETE, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody()).isFalse();
     }
 
-    private void assertEmployee(EmployeeDTO actualEmployee, EmployeeDTO expectedEmployee) {
-        Assertions.assertThat(actualEmployee).isNotNull();
-        Assertions.assertThat(actualEmployee.getFirstName()).isEqualTo(expectedEmployee.getFirstName());
-        Assertions.assertThat(actualEmployee.getLastName()).isEqualTo(expectedEmployee.getLastName());
-        Assertions.assertThat(actualEmployee.getAge()).isEqualTo(expectedEmployee.getAge());
-        Assertions.assertThat(actualEmployee.getNoOfChildrens()).isEqualTo(expectedEmployee.getNoOfChildrens());
-        Assertions.assertThat(actualEmployee.getSpouse()).isEqualTo(expectedEmployee.getSpouse());
-        Assertions.assertThat(actualEmployee.getDateOfJoining()).isEqualTo(expectedEmployee.getDateOfJoining());
-        Assertions.assertThat(actualEmployee.getHobbies().toArray()).isEqualTo(expectedEmployee.getHobbies().toArray());
-        Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(expectedEmployee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray());
-        Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(expectedEmployee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray());
-        Assertions.assertThat(actualEmployee.getAddress().getStreetAddress()).isEqualTo(expectedEmployee.getAddress().getStreetAddress());
-        Assertions.assertThat(actualEmployee.getAddress().getCity()).isEqualTo(expectedEmployee.getAddress().getCity());
-        Assertions.assertThat(actualEmployee.getAddress().getState()).isEqualTo(expectedEmployee.getAddress().getState());
-        Assertions.assertThat(actualEmployee.getAddress().getCountry()).isEqualTo(expectedEmployee.getAddress().getCountry());
-        Assertions.assertThat(actualEmployee.getAddress().getPostalCode()).isEqualTo(expectedEmployee.getAddress().getPostalCode());
+    public void assertRecord(EmployeeDTO actualRecord, EmployeeDTO expectedRecord) {
+        Assertions.assertThat(actualRecord).isNotNull();
+        Assertions.assertThat(actualRecord.getFirstName()).isEqualTo(expectedRecord.getFirstName());
+        Assertions.assertThat(actualRecord.getLastName()).isEqualTo(expectedRecord.getLastName());
+        Assertions.assertThat(actualRecord.getAge()).isEqualTo(expectedRecord.getAge());
+        Assertions.assertThat(actualRecord.getNoOfChildrens()).isEqualTo(expectedRecord.getNoOfChildrens());
+        Assertions.assertThat(actualRecord.getSpouse()).isEqualTo(expectedRecord.getSpouse());
+        Assertions.assertThat(actualRecord.getDateOfJoining()).isEqualTo(expectedRecord.getDateOfJoining());
+        Assertions.assertThat(actualRecord.getHobbies().toArray()).isEqualTo(expectedRecord.getHobbies().toArray());
+        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray());
+        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray());
+        Assertions.assertThat(actualRecord.getAddress().getStreetAddress()).isEqualTo(expectedRecord.getAddress().getStreetAddress());
+        Assertions.assertThat(actualRecord.getAddress().getCity()).isEqualTo(expectedRecord.getAddress().getCity());
+        Assertions.assertThat(actualRecord.getAddress().getState()).isEqualTo(expectedRecord.getAddress().getState());
+        Assertions.assertThat(actualRecord.getAddress().getCountry()).isEqualTo(expectedRecord.getAddress().getCountry());
+        Assertions.assertThat(actualRecord.getAddress().getPostalCode()).isEqualTo(expectedRecord.getAddress().getPostalCode());
     }
 }

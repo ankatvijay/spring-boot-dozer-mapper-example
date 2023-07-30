@@ -2,8 +2,10 @@ package com.spring.crud.demo.controller.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import com.spring.crud.demo.dto.ErrorResponseDTO;
+import com.spring.crud.demo.controller.BaseControllerTest;
+import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.SuperHeroDTO;
+import com.spring.crud.demo.model.SuperHero;
 import com.spring.crud.demo.utils.FileLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomUtils;
@@ -27,7 +29,7 @@ import java.util.Map;
 
 @Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-public class SuperHeroControllerIT {
+public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, SuperHeroDTO> {
 
     @LocalServerPort
     private int port;
@@ -49,11 +51,12 @@ public class SuperHeroControllerIT {
     @BeforeEach
     public void setUp() {
         url = String.format("http://localhost:%d", port);
-        restTemplate.delete(url + "/super-heroes" );
+        restTemplate.delete(url + "/super-heroes");
     }
 
     @Test
-    void testGivenNon_WhenFindAllSuperHeroes_ThenReturnAllRecord() throws IOException {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
         // Given
         List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
         superHeros.forEach(s -> restTemplate.postForEntity(url + "/super-heroes", s, SuperHeroDTO.class));
@@ -78,7 +81,7 @@ public class SuperHeroControllerIT {
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(responseEntity.getBody()).extracting(
-                SuperHeroDTO::getName,
+                        SuperHeroDTO::getName,
                         SuperHeroDTO::getSuperName,
                         SuperHeroDTO::getProfession,
                         SuperHeroDTO::getAge,
@@ -87,12 +90,13 @@ public class SuperHeroControllerIT {
     }
 
     @Test
-    void testGivenNon_WhenFindAllSuperHeroes_ThenReturnError() {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenThrowException() {
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes", HttpMethod.GET, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes", HttpMethod.GET, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -102,11 +106,12 @@ public class SuperHeroControllerIT {
     }
 
     @Test
-    void testGivenId_WhenFindSuperHeroById_ThenReturnRecord() throws IOException {
+    @Override
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
         // Given
         List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO saveSuperHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", saveSuperHero, SuperHeroDTO.class).getBody();
+        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
 
         // When
         HttpHeaders headers = new HttpHeaders();
@@ -118,11 +123,12 @@ public class SuperHeroControllerIT {
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().getId()).isEqualTo(expectedSuperHero.getId());
-        assertSuperHero(expectedSuperHero, responseEntity.getBody());
+        assertRecord(expectedSuperHero, responseEntity.getBody());
     }
 
     @Test
-    void testGivenRandomId_WhenFindSuperHeroById_ThenReturnRecord() {
+    @Override
+    public void testGivenRandomId_WhenGetRecordsById_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -130,7 +136,7 @@ public class SuperHeroControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + id, HttpMethod.GET, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + id, HttpMethod.GET, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -140,11 +146,12 @@ public class SuperHeroControllerIT {
     }
 
     @Test
-    void testGivenSuperHero_WhenFindSuperHeroesByExample_ThenReturnRecords() throws IOException {
+    @Override
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
         // Given
         List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO saveSuperHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", saveSuperHero, SuperHeroDTO.class).getBody();
+        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
         Map<String, Object> map = new ObjectMapper().convertValue(expectedSuperHero, Map.class);
 
         // When
@@ -159,21 +166,21 @@ public class SuperHeroControllerIT {
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().size()).isGreaterThan(0);
         Assertions.assertThat(responseEntity.getBody().get(0).getId()).isEqualTo(expectedSuperHero.getId());
-        assertSuperHero(expectedSuperHero, responseEntity.getBody().get(0));
+        assertRecord(expectedSuperHero, responseEntity.getBody().get(0));
     }
 
     @Test
-    void testGivenRandomSuperHero_WhenFindSuperHeroesByExample_ThenReturnError() throws IOException {
+    @Override
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO saveSuperHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        Map<String, Object> map = objectMapper.convertValue(saveSuperHero, Map.class);
+        SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
+        SuperHeroDTO map = objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class);
 
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<Map> entity = new HttpEntity<Map>(map, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/search", HttpMethod.POST, entity, ErrorResponseDTO.class);
+        HttpEntity<SuperHeroDTO> entity = new HttpEntity<SuperHeroDTO>(map, headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/search", HttpMethod.POST, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -183,7 +190,8 @@ public class SuperHeroControllerIT {
     }
 
     @Test
-    void testGivenSuperHero_WhenSaveSuperHero_ThenReturnNewSuperHero() throws IOException {
+    @Override
+    public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws IOException {
         // Given
         List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
         SuperHeroDTO expectedSuperHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
@@ -197,21 +205,22 @@ public class SuperHeroControllerIT {
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        assertSuperHero(expectedSuperHero, responseEntity.getBody());
+        assertRecord(expectedSuperHero, responseEntity.getBody());
     }
 
     @Test
-    void testGivenSavedSuperHero_WhenSaveSuperHero_ThenReturnError() throws IOException {
+    @Override
+    public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() throws IOException {
         // Given
         List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO saveSuperHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", saveSuperHero, SuperHeroDTO.class).getBody();
+        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
 
         // When
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<SuperHeroDTO> entity = new HttpEntity<SuperHeroDTO>(expectedSuperHero, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes", HttpMethod.POST, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes", HttpMethod.POST, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
@@ -221,11 +230,12 @@ public class SuperHeroControllerIT {
     }
 
     @Test
-    void testGivenExistingSuperHero_WhenUpdateSuperHero_ThenReturnUpdatedSuperHero() throws IOException {
+    @Override
+    public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
         // Given
         List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO saveSuperHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", saveSuperHero, SuperHeroDTO.class).getBody();
+        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
 
         // When
         expectedSuperHero.setAge(45);
@@ -238,30 +248,12 @@ public class SuperHeroControllerIT {
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().getId()).isEqualTo(expectedSuperHero.getId());
-        assertSuperHero(expectedSuperHero, responseEntity.getBody());
+        assertRecord(expectedSuperHero, responseEntity.getBody());
     }
 
     @Test
-    void testGivenNull_WhenUpdateSuperHero_ThenThrowError() throws IOException {
-        // Given
-        SuperHeroDTO superHero = new SuperHeroDTO();
-        superHero.setId(1);
-
-        // When
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<SuperHeroDTO> entity = new HttpEntity<SuperHeroDTO>(superHero, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + superHero.getId(), HttpMethod.PUT, entity, ErrorResponseDTO.class);
-
-        // Then
-        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + superHero.getId());
-    }
-
-    @Test
-    void testGivenNull_WhenUpdateSuperHero_ThenThrowError1() throws IOException {
+    @Override
+    public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
         SuperHeroDTO superHero = new SuperHeroDTO();
@@ -271,7 +263,7 @@ public class SuperHeroControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<SuperHeroDTO> entity = new HttpEntity<SuperHeroDTO>(superHero, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + id, HttpMethod.PUT, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + id, HttpMethod.PUT, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -281,7 +273,26 @@ public class SuperHeroControllerIT {
     }
 
     @Test
-    void testGivenNull_WhenUpdateSuperHero_ThenThrowError2() throws IOException {
+    void testGivenRandomIdAndRandomRecord_WhenUpdateRecord_ThenThrowException() {
+        // Given
+        SuperHeroDTO superHero = new SuperHeroDTO();
+        superHero.setId(1);
+
+        // When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<SuperHeroDTO> entity = new HttpEntity<SuperHeroDTO>(superHero, headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + superHero.getId(), HttpMethod.PUT, entity, ResponseDTO.class);
+
+        // Then
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(responseEntity.getBody()).isNotNull();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + superHero.getId());
+    }
+
+    @Test
+    void testGivenRandomIdAndExistingRecordWithoutId_WhenUpdateRecord_ThenThrowException() throws IOException {
         // Given
         int id = RandomUtils.nextInt();
         List<SuperHeroDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
@@ -291,7 +302,7 @@ public class SuperHeroControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity<SuperHeroDTO> entity = new HttpEntity<SuperHeroDTO>(expectedSuperHero, headers);
-        ResponseEntity<ErrorResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/"+id, HttpMethod.PUT, entity, ErrorResponseDTO.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + id, HttpMethod.PUT, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
@@ -301,7 +312,8 @@ public class SuperHeroControllerIT {
     }
 
     @Test
-    void testGiveId_WhenDeleteSuperHero_ThenReturnTrue() throws IOException {
+    @Override
+    public void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
         List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
         SuperHeroDTO superHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
@@ -311,16 +323,18 @@ public class SuperHeroControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<Boolean> responseEntity = restTemplate.exchange(url + "/super-heroes/" + savedSuperHero.getId(), HttpMethod.DELETE, entity, Boolean.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + savedSuperHero.getId(), HttpMethod.DELETE, entity, ResponseDTO.class);
 
         // Then
-        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody()).isTrue();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Record deleted with id " + savedSuperHero.getId());
     }
 
     @Test
-    void testGiveRandomId_WhenDeleteSuperHero_ThenReturnFalse() {
+    @Override
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         int id = RandomUtils.nextInt();
 
@@ -328,20 +342,34 @@ public class SuperHeroControllerIT {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         HttpEntity entity = new HttpEntity(headers);
-        ResponseEntity<Boolean> responseEntity = restTemplate.exchange(url + "/super-heroes/" + id, HttpMethod.DELETE, entity, Boolean.class);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes/" + id, HttpMethod.DELETE, entity, ResponseDTO.class);
+
+        // Then
+        Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+        Assertions.assertThat(responseEntity.getBody()).isNotNull();
+        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + id);
+    }
+
+    @Test
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
+        // Given & When
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity entity = new HttpEntity(headers);
+        ResponseEntity<ResponseDTO> responseEntity = restTemplate.exchange(url + "/super-heroes", HttpMethod.DELETE, entity, ResponseDTO.class);
 
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.OK);
-        Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody()).isFalse();
     }
 
-    private void assertSuperHero(SuperHeroDTO actualSuperHero, SuperHeroDTO expectedSuperHero) {
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero.getName()).isEqualTo(expectedSuperHero.getName());
-        Assertions.assertThat(actualSuperHero.getSuperName()).isEqualTo(expectedSuperHero.getSuperName());
-        Assertions.assertThat(actualSuperHero.getProfession()).isEqualTo(expectedSuperHero.getProfession());
-        Assertions.assertThat(actualSuperHero.getAge()).isEqualTo(expectedSuperHero.getAge());
-        Assertions.assertThat(actualSuperHero.getCanFly()).isEqualTo(expectedSuperHero.getCanFly());
+    public void assertRecord(SuperHeroDTO expectedRecord, SuperHeroDTO actualRecord) {
+        Assertions.assertThat(actualRecord).isNotNull();
+        Assertions.assertThat(actualRecord.getName()).isEqualTo(expectedRecord.getName());
+        Assertions.assertThat(actualRecord.getSuperName()).isEqualTo(expectedRecord.getSuperName());
+        Assertions.assertThat(actualRecord.getProfession()).isEqualTo(expectedRecord.getProfession());
+        Assertions.assertThat(actualRecord.getAge()).isEqualTo(expectedRecord.getAge());
+        Assertions.assertThat(actualRecord.getCanFly()).isEqualTo(expectedRecord.getCanFly());
     }
 }

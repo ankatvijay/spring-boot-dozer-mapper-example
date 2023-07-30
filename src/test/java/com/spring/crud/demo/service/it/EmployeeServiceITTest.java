@@ -1,24 +1,29 @@
-package com.spring.crud.demo.repository;
+package com.spring.crud.demo.service.it;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.spring.crud.demo.exception.InternalServerErrorException;
+import com.spring.crud.demo.exception.NotFoundException;
+import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.emp.Address;
 import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.model.emp.PhoneNumber;
+import com.spring.crud.demo.service.BaseServiceTest;
+import com.spring.crud.demo.service.EmployeeService;
 import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.AssertionsForClassTypes;
 import org.assertj.core.groups.Tuple;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 
@@ -28,33 +33,24 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
-@DataJpaTest
-//@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
+@SpringBootTest(value = "EmployeeServiceITTest")
+class EmployeeServiceITTest implements BaseServiceTest<Employee> {
 
     @Autowired
-    private EmployeeRepository employeeRepository;
-    public static File file = FileLoader.getFileFromResource("employees.json");
-    public static ObjectMapper objectMapper = new ObjectMapper();
-    public static TypeFactory typeFactory = objectMapper.getTypeFactory();
+    private EmployeeService employeeService;
+    private static Tuple[] expectedEmployees = null;
+    private static List<Employee> employees;
 
-    @BeforeEach
-    void init() {
-        employeeRepository.deleteAll();
-    }
-
-    @Override
-    @Test
-    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
-        // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
-        employeeRepository.saveAll(employees);
-        Tuple[] expectedEmployees = employees.stream()
-                .map(employee -> AssertionsForClassTypes.tuple(
-                        employee.getFirstName(),
+    @BeforeAll
+    static void initOnce() throws IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        TypeFactory typeFactory = objectMapper.getTypeFactory();
+        File file = FileLoader.getFileFromResource("employees.json");
+        employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
+        expectedEmployees = employees.stream()
+                .map(employee -> AssertionsForClassTypes.tuple(employee.getFirstName(),
                         employee.getLastName(),
                         employee.getAge(),
                         employee.getNoOfChildrens(),
@@ -70,9 +66,21 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()
                 ))
                 .toArray(Tuple[]::new);
+    }
+
+    @BeforeEach
+    void init() {
+        employeeService.deleteAllRecords();
+    }
+
+    @Test
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() {
+        // Given
+        employees.forEach(employee -> employeeService.insertRecord(employee));
 
         // When
-        List<Employee> actualEmployees = employeeRepository.findAll();
+        List<Employee> actualEmployees = employeeService.getAllRecords();
 
         // Then
         Assertions.assertThat(actualEmployees).isNotNull();
@@ -96,81 +104,81 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                 .containsExactly(expectedEmployees);
     }
 
-    @Override
     @Test
-    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
+    @Override
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() {
         // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
-        Employee expectedEmployee = employeeRepository.save(employee);
+        Employee expectedEmployee = employeeService.insertRecord(employee).orElseGet(Employee::new);
 
         // When
-        Employee actualEmployee = employeeRepository.findById(expectedEmployee.getId()).orElseGet(Employee::new);
+        Employee actualEmployee = employeeService.getRecordsById(expectedEmployee.getId()).orElseGet(Employee::new);
 
         // Then
         assertRecord(expectedEmployee, actualEmployee);
     }
 
-    @Override
     @Test
-    public void testGivenRandomId_WhenGetRecordsById_ThenReturnEmpty() {
+    @Override
+    public void testGivenRandomId_WhenGetRecordsById_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When
-        Optional<Employee> actualEmployee = employeeRepository.findById(id);
+        Assertions.assertThatThrownBy(() -> employeeService.getRecordsById(id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with id " + id);
 
         // Then
-        Assertions.assertThat(actualEmployee).isEmpty();
     }
 
-    @Override
     @Test
-    public void testGivenId_WhenExistRecordById_ThenReturnTrue() throws IOException {
+    @Override
+    public void testGivenId_WhenExistRecordById_ThenReturnTrue() {
         // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
-        Employee expectedEmployee = employeeRepository.save(employee);
+        Employee expectedEmployee = employeeService.insertRecord(employee).orElseGet(Employee::new);
 
         // When
-        Boolean actualEmployee = employeeRepository.existsById(expectedEmployee.getId());
+        Boolean actualEmployee = employeeService.existRecordById(expectedEmployee.getId());
 
         // Then
         Assertions.assertThat(actualEmployee).isNotNull();
         Assertions.assertThat(actualEmployee).isTrue();
     }
 
-    @Override
     @Test
+    @Override
     public void testGivenRandomId_WhenExistRecordById_ThenReturnFalse() {
         // Given
-        Integer id = RandomUtils.nextInt();
+        int id = RandomUtils.nextInt();
 
         // When
-        Boolean actualEmployee = employeeRepository.existsById(id);
+        Boolean actualEmployee = employeeService.existRecordById(id);
 
         // Then
         Assertions.assertThat(actualEmployee).isNotNull();
         Assertions.assertThat(actualEmployee).isFalse();
     }
 
-    @Override
     @Test
-    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
+    @Override
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() {
         // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
-        Employee expectedEmployee = employeeRepository.save(employee);
-        Employee example = new Employee();
-        expectedEmployee.setFirstName("Rahul");
-        expectedEmployee.setLastName("Ghadage");
-        expectedEmployee.setNoOfChildrens(0);
-        expectedEmployee.setAge(28);
-        expectedEmployee.setSpouse(true);
+        Employee expectedEmployee = employeeService.insertRecord(employee).orElseGet(Employee::new);
+        Employee employeeExample = new Employee();
+        employeeExample.setFirstName("Rahul");
+        employeeExample.setLastName("Ghadage");
+        employeeExample.setNoOfChildrens(0);
+        employeeExample.setAge(28);
+        employeeExample.setSpouse(true);
+        employeeExample.setAddress(null);
+        employeeExample.setPhoneNumbers(null);
+        employeeExample.setDateOfJoining(LocalDateTime.parse("01-01-2000 01:01:01", DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
 
         // When
-        Example<Employee> employeeExample = Example.of(example, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
-        List<Employee> actualEmployees = employeeRepository.findAll(employeeExample);
+        List<Employee> actualEmployees = employeeService.getAllRecordsByExample(employeeExample);
 
         // Then
         Assertions.assertThat(actualEmployees).isNotNull();
@@ -179,20 +187,19 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
         assertRecord(expectedEmployee, actualEmployees.get(0));
     }
 
-    @Override
     @Test
+    @Override
     public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenReturnEmptyListRecords() {
         // Given
         Employee expectedEmployee = new Employee();
-        expectedEmployee.setFirstName("Raj");
-        expectedEmployee.setLastName("Kumar");
-        expectedEmployee.setNoOfChildrens(3);
-        expectedEmployee.setAge(60);
-        expectedEmployee.setSpouse(false);
+        expectedEmployee.setFirstName("Rahul");
+        expectedEmployee.setLastName("Ghadage");
+        expectedEmployee.setNoOfChildrens(0);
+        expectedEmployee.setAge(28);
+        expectedEmployee.setSpouse(true);
 
         // When
-        Example<Employee> employeeExample = Example.of(expectedEmployee, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
-        List<Employee> actualEmployees = employeeRepository.findAll(employeeExample);
+        List<Employee> actualEmployees = employeeService.getAllRecordsByExample(expectedEmployee);
 
         // Then
         Assertions.assertThat(actualEmployees).isNotNull();
@@ -201,12 +208,13 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
 
     @ParameterizedTest
     @MethodSource(value = "generateExample")
-    public void testGivenMultipleExample_WhenGetAllRecordsByExample_ThenReturnListRecord(Example<Employee> employeeExample, int count) throws IOException {
+    @Override
+    public void testGivenMultipleExample_WhenGetAllRecordsByExample_ThenReturnListRecord(Example<Employee> example, int count) {
         // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
-        employeeRepository.saveAll(employees);
-        Tuple[] expectedTupleEmployees = employees.stream()
-                .filter(employee -> employee.getSpouse().equals(employeeExample.getProbe().getSpouse()))
+        employeeService.insertBulkRecords(employees);
+        List<Employee> expectedEmployeees = employees.stream()
+                .filter(employee -> employee.getSpouse().equals(example.getProbe().getSpouse())).toList();
+        Tuple[] expectedTupleEmployees = expectedEmployeees.stream()
                 .map(employee -> AssertionsForClassTypes.tuple(employee.getFirstName(),
                         employee.getLastName(),
                         employee.getAge(),
@@ -225,7 +233,7 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                 .toArray(Tuple[]::new);
 
         // When
-        List<Employee> actualEmployees = employeeRepository.findAll(employeeExample);
+        List<Employee> actualEmployees = employeeService.getAllRecordsByExample(example.getProbe());
 
         // Then
         Assertions.assertThat(actualEmployees).isNotNull();
@@ -249,8 +257,8 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                 .containsExactly(expectedTupleEmployees);
     }
 
-    @Override
     @Test
+    @Override
     public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() {
         // Given
         PhoneNumber expectedPhoneNumber = new PhoneNumber();
@@ -279,85 +287,121 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
         expectedPhoneNumber.setEmployee(expectedEmployee);
 
         // When
-        Employee actualEmployee = employeeRepository.save(expectedEmployee);
+        Employee actualEmployee = employeeService.insertRecord(expectedEmployee).orElseGet(Employee::new);
 
         // Then
         assertRecord(expectedEmployee, actualEmployee);
     }
 
-    @Override
     @Test
-    public void testGivenExistingRecordAndUpdate_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
+    @Override
+    public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() {
         // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
-        Employee expectedEmployee = employeeRepository.save(employee);
-        expectedEmployee.setAge(50);
+        Employee expectedEmployee = employeeService.insertRecord(employee).orElseGet(Employee::new);
 
         // When
-        Employee actualEmployee = employeeRepository.save(expectedEmployee);
+        Assertions.assertThatThrownBy(() -> employeeService.insertRecord(expectedEmployee))
+                .isInstanceOf(RecordFoundException.class)
+                .hasMessage("Record already found with id " + expectedEmployee.getId());
 
         // Then
-        assertRecord(expectedEmployee, actualEmployee);
     }
 
-    @Override
     @Test
-    public void testGivenIdAndUpdatedRecord_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
+    @Override
+    public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() {
         // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
-        Employee savedEmployee = employeeRepository.save(employee);
+        Employee savedEmployee = employeeService.insertRecord(employee).orElseGet(Employee::new);
 
         // When
-        Employee expectedEmployee = employeeRepository.findById(savedEmployee.getId()).orElseGet(Employee::new);
+        Employee expectedEmployee = employeeService.getRecordsById(savedEmployee.getId()).orElseGet(Employee::new);
         expectedEmployee.setAge(18);
-        Employee actualEmployee = employeeRepository.save(expectedEmployee);
+        Employee actualEmployee = employeeService.updateRecord(savedEmployee.getId(), expectedEmployee).orElseGet(Employee::new);
 
         // Then
         assertRecord(expectedEmployee, actualEmployee);
     }
 
-    @Override
     @Test
-    public void testGivenId_WhenDeleteRecord_ThenReturnFalse() throws IOException {
-        // Given
-        List<Employee> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
-        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
-        Employee expectedEmployee = employeeRepository.save(employee);
-
-        // When
-        employeeRepository.deleteById(expectedEmployee.getId());
-        Boolean deletedEmployee = employeeRepository.existsById(expectedEmployee.getId());
-
-        // Then
-        Assertions.assertThat(deletedEmployee).isFalse();
-    }
-
     @Override
-    @Test
-    public void testGivenRandomId_WhenDeleteRecord_ThenThrowException() {
+    public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
-        Integer id = RandomUtils.nextInt();
+        int id = RandomUtils.nextInt();
 
         // When & Then
-        Assertions.assertThatThrownBy(() -> employeeRepository.deleteById(id))
-                .isInstanceOf(EmptyResultDataAccessException.class)
-                .hasMessage(String.format("No class com.spring.crud.demo.model.emp.Employee entity with id %d exists!", id));
+        Assertions.assertThatThrownBy(() -> employeeService.updateRecord(id, null))
+                .isInstanceOf(NullPointerException.class)
+                .hasMessage("Payload record id is null");
     }
 
-    @Override
     @Test
-    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
+    @Override
+    public void testGivenExistingRecordAndRandomId_WhenUpdateRecord_ThenThrowException() {
         // Given
-        employeeRepository.deleteAll();
+        int id = RandomUtils.nextInt();
+        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        Employee savedEmployee = employeeService.insertRecord(employee).orElseGet(Employee::new);
+
+        // When & Then
+        Employee expectedEmployee = employeeService.getRecordsById(savedEmployee.getId()).orElseGet(Employee::new);
+        expectedEmployee.setAge(18);
+        Assertions.assertThatThrownBy(() -> employeeService.updateRecord(id, expectedEmployee))
+                .isInstanceOf(InternalServerErrorException.class)
+                .hasMessage("Update Record id: " + id + " not equal to payload id: " + expectedEmployee.getId());
+    }
+
+    @Test
+    @Override
+    public void testGivenRecordIdAndRecord_WhenUpdateRecord_ThenThrowException() {
+        // Given
+        Employee expectedEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        expectedEmployee.setId(25);
+
+        // When & Then
+        Assertions.assertThatThrownBy(() -> employeeService.updateRecord(expectedEmployee.getId(), expectedEmployee))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with id " + expectedEmployee.getId());
+    }
+
+    @Test
+    @Override
+    public void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
+        // Given
+        Employee employee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
+        Employee savedEmployee = employeeService.insertRecord(employee).orElseGet(Employee::new);
 
         // When
-        List<Employee> employees = employeeRepository.findAll();
+        Boolean flag = employeeService.deleteRecordById(savedEmployee.getId());
 
         // Then
-        Assertions.assertThat(employees).isNotNull();
-        Assertions.assertThat(employees.size()).isEqualTo(0);
+        Assertions.assertThat(flag).isTrue();
+    }
+
+    @Test
+    @Override
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
+        // Given
+        int id = RandomUtils.nextInt();
+
+        // When
+        Boolean flag = employeeService.deleteRecordById(id);
+
+        // Then
+        Assertions.assertThat(flag).isFalse();
+    }
+
+    @Test
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
+        // Given & When
+        employeeService.deleteAllRecords();
+        List<Employee> actualEmployees = employeeService.getAllRecords();
+
+        // Then
+        Assertions.assertThat(actualEmployees).isNotNull();
+        Assertions.assertThat(actualEmployees).isEmpty();
     }
 
     private static Stream<Arguments> generateExample() {

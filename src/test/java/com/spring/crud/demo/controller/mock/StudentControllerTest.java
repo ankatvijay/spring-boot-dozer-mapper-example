@@ -2,14 +2,15 @@ package com.spring.crud.demo.controller.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.spring.crud.demo.controller.BaseControllerTest;
 import com.spring.crud.demo.controller.StudentController;
+import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.StudentDTO;
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.mapper.StudentMapper;
 import com.spring.crud.demo.model.Student;
-import com.spring.crud.demo.service.IStudentService;
-import com.spring.crud.demo.service.mock.StudentService;
+import com.spring.crud.demo.service.StudentService;
 import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
@@ -30,17 +31,16 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-class StudentControllerTest {
+class StudentControllerTest implements BaseControllerTest<Student, StudentDTO> {
 
     private static File file;
     private static ObjectMapper objectMapper;
     private static TypeFactory typeFactory;
     private static StudentMapper studentMapper;
-    private static IStudentService studentService;
+    private static StudentService studentService;
     private static StudentController studentController;
 
     @BeforeAll
@@ -55,7 +55,8 @@ class StudentControllerTest {
     }
 
     @Test
-    void testGivenNon_WhenFindAllStudents_ThenReturnAllRecord() throws IOException {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
         // Given
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Tuple[] expectedStudents = students.stream()
@@ -67,9 +68,9 @@ class StudentControllerTest {
                 .toArray(Tuple[]::new);
 
         // When
-        Mockito.when(studentService.findAllStudents()).thenReturn(students);
+        Mockito.when(studentService.getAllRecords()).thenReturn(students);
         students.forEach(student -> Mockito.when(studentMapper.convertFromEntityToDto(student)).thenReturn(objectMapper.convertValue(student, StudentDTO.class)));
-        ResponseEntity<List<StudentDTO>> actualStudents = studentController.findAllStudents();
+        ResponseEntity<List<StudentDTO>> actualStudents = studentController.getAllRecords();
 
         // Then
         Assertions.assertThat(actualStudents.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -82,57 +83,60 @@ class StudentControllerTest {
                         StudentDTO::getDateOfBirth,
                         StudentDTO::getMarks)
                 .containsExactly(expectedStudents);
-        Mockito.verify(studentService, Mockito.atLeastOnce()).findAllStudents();
+        Mockito.verify(studentService, Mockito.atLeastOnce()).getAllRecords();
         students.forEach(student -> Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(student));
     }
 
     @Test
-    void testGivenNon_WhenFindAllStudents_ThenReturnError() {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenThrowException() {
         // Given
         List<Student> studentList = new ArrayList<>();
 
         // When & Then
-        Mockito.when(studentService.findAllStudents()).thenReturn(studentList);
-        Assertions.assertThatThrownBy(() -> studentController.findAllStudents())
+        Mockito.when(studentService.getAllRecords()).thenReturn(studentList);
+        Assertions.assertThatThrownBy(() -> studentController.getAllRecords())
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found");
-        Mockito.verify(studentService, Mockito.atLeastOnce()).findAllStudents();
+        Mockito.verify(studentService, Mockito.atLeastOnce()).getAllRecords();
     }
 
     @Test
-    void testGivenId_WhenFindStudentById_ThenReturnRecord() throws IOException {
+    @Override
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
         // Given
         int id = 12;
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
 
         // When
-        Mockito.when(studentService.findStudentById(id)).thenReturn(Optional.of(expectedStudent));
+        Mockito.when(studentService.getRecordsById(id)).thenReturn(Optional.of(expectedStudent));
         Mockito.when(studentMapper.convertFromEntityToDto(expectedStudent)).thenReturn(objectMapper.convertValue(expectedStudent, StudentDTO.class));
-        ResponseEntity<StudentDTO> actualStudent = studentController.findStudentById(id);
+        ResponseEntity<StudentDTO> actualStudent = studentController.getRecordsById(id);
 
         // Then
         Assertions.assertThat(actualStudent.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualStudent.getBody()).isNotNull();
-        assertStudent(expectedStudent, actualStudent.getBody());
-        Mockito.verify(studentService).findStudentById(id);
+        assertRecord(expectedStudent, actualStudent.getBody());
+        Mockito.verify(studentService).getRecordsById(id);
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(expectedStudent);
     }
 
     @Test
-    void testGivenRandomId_WhenFindStudentById_ThenReturnRecord() {
+    @Override
+    public void testGivenRandomId_WhenGetRecordsById_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When & Then
-        Mockito.when(studentService.findStudentById(id)).thenReturn(Optional.empty());
-        Assertions.assertThatThrownBy(() -> studentController.findStudentById(id))
+        Mockito.when(studentService.getRecordsById(id)).thenReturn(Optional.empty());
+        Assertions.assertThatThrownBy(() -> studentController.getRecordsById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
     }
 
     /*
-    @Test
+    @Test@Override
     void testGivenId_WhenFindStudentByRollNo_ThenReturnRecord() throws IOException {
         // Given
         int rollNo = 12;
@@ -152,7 +156,7 @@ class StudentControllerTest {
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(expectedStudent);
     }
 
-    @Test
+    @Test@Override
     void testGivenRandomId_WhenFindStudentByRollNo_ThenReturnRecord() {
         // Given
         int rollNo = RandomUtils.nextInt();
@@ -166,160 +170,184 @@ class StudentControllerTest {
     */
 
     @Test
-    void testGivenStudent_WhenFindStudentsByExample_ThenReturnRecords() throws IOException {
+    @Override
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
         // Given
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
-        Map<String, Object> map = new ObjectMapper().convertValue(expectedStudent, Map.class);
+        StudentDTO map = new ObjectMapper().convertValue(expectedStudent, StudentDTO.class);
 
         // When
-        Mockito.when(studentService.findStudentsByExample(expectedStudent)).thenReturn(List.of(expectedStudent));
+        Mockito.when(studentService.getAllRecordsByExample(expectedStudent)).thenReturn(List.of(expectedStudent));
         Mockito.when(studentMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedStudent);
         Mockito.when(studentMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(map, StudentDTO.class));
-        ResponseEntity<List<StudentDTO>> actualStudents = studentController.findStudentsByExample(map);
+        ResponseEntity<List<StudentDTO>> actualStudents = studentController.getAllRecordsByExample(map);
 
         // Then
         Assertions.assertThat(actualStudents.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualStudents.getBody()).isNotNull();
         Assertions.assertThat(actualStudents.getBody().size()).isGreaterThan(0);
-        assertStudent(expectedStudent, actualStudents.getBody().get(0));
-        Mockito.verify(studentService).findStudentsByExample(expectedStudent);
+        assertRecord(expectedStudent, actualStudents.getBody().get(0));
+        Mockito.verify(studentService).getAllRecordsByExample(expectedStudent);
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenRandomStudent_WhenFindStudentsByExample_ThenReturnError() {
+    @Override
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
         // Given
         Student expectedStudent = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
-        Map<String, Object> map = objectMapper.convertValue(expectedStudent, Map.class);
+        StudentDTO map = objectMapper.convertValue(expectedStudent, StudentDTO.class);
         List<Student> students = new ArrayList<>();
 
         // When & Then
-        Mockito.when(studentService.findStudentsByExample(expectedStudent)).thenReturn(students);
+        Mockito.when(studentService.getAllRecordsByExample(expectedStudent)).thenReturn(students);
         Mockito.when(studentMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedStudent);
-        Assertions.assertThatThrownBy(() -> studentController.findStudentsByExample(map))
+        Assertions.assertThatThrownBy(() -> studentController.getAllRecordsByExample(map))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with map " + map);
 
 
-        Mockito.verify(studentService).findStudentsByExample(expectedStudent);
+        Mockito.verify(studentService).getAllRecordsByExample(expectedStudent);
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
-    void testGivenStudent_WhenSaveStudent_ThenReturnNewStudent() throws IOException {
+    @Override
+    public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws IOException {
         // Given
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
 
         // When
-        Mockito.when(studentService.saveStudent(expectedStudent)).thenReturn(Optional.of(expectedStudent));
+        Mockito.when(studentService.insertRecord(expectedStudent)).thenReturn(Optional.of(expectedStudent));
         Mockito.when(studentMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedStudent);
         Mockito.when(studentMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(expectedStudent, StudentDTO.class));
-        ResponseEntity<StudentDTO> actualStudent = studentController.saveStudent(objectMapper.convertValue(expectedStudent, StudentDTO.class));
+        ResponseEntity<StudentDTO> actualStudent = studentController.insertRecord(objectMapper.convertValue(expectedStudent, StudentDTO.class));
 
         // Then
         Assertions.assertThat(actualStudent.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(actualStudent.getBody()).isNotNull();
-        assertStudent(expectedStudent, actualStudent.getBody());
-        Mockito.verify(studentService).saveStudent(expectedStudent);
+        assertRecord(expectedStudent, actualStudent.getBody());
+        Mockito.verify(studentService).insertRecord(expectedStudent);
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenExistingStudent_WhenSaveStudent_ThenThrowError() throws IOException {
+    @Override
+    public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() throws IOException {
         // Given
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(15);
 
         // When
-        Mockito.when(studentService.saveStudent(expectedStudent)).thenReturn(Optional.empty());
+        Mockito.when(studentService.insertRecord(expectedStudent)).thenReturn(Optional.empty());
         Mockito.when(studentMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedStudent);
-        Assertions.assertThatThrownBy(() -> studentController.saveStudent(objectMapper.convertValue(expectedStudent, StudentDTO.class)))
+        Assertions.assertThatThrownBy(() -> studentController.insertRecord(objectMapper.convertValue(expectedStudent, StudentDTO.class)))
                 .isInstanceOf(InternalServerErrorException.class)
                 .hasMessage("Something went wrong");
 
         // Then
-        Mockito.verify(studentService).saveStudent(expectedStudent);
+        Mockito.verify(studentService).insertRecord(expectedStudent);
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
-    void testGivenExistingStudent_WhenUpdateStudent_ThenReturnUpdatedStudent() throws IOException {
+    @Override
+    public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
         // Given
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(15);
 
         // When
-        Mockito.when(studentService.updateStudent(expectedStudent.getId(), expectedStudent)).thenReturn(Optional.of(expectedStudent));
+        Mockito.when(studentService.updateRecord(expectedStudent.getId(), expectedStudent)).thenReturn(Optional.of(expectedStudent));
         Mockito.when(studentMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedStudent);
         Mockito.when(studentMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(expectedStudent, StudentDTO.class));
-        ResponseEntity<StudentDTO> actualStudent = studentController.updateStudent(expectedStudent.getId(), objectMapper.convertValue(expectedStudent, StudentDTO.class));
+        ResponseEntity<StudentDTO> actualStudent = studentController.updateRecord(expectedStudent.getId(), objectMapper.convertValue(expectedStudent, StudentDTO.class));
 
         // Then
         Assertions.assertThat(actualStudent.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(actualStudent.getBody()).isNotNull();
-        assertStudent(expectedStudent, actualStudent.getBody());
-        Mockito.verify(studentService).updateStudent(expectedStudent.getId(), expectedStudent);
+        assertRecord(expectedStudent, actualStudent.getBody());
+        Mockito.verify(studentService).updateRecord(expectedStudent.getId(), expectedStudent);
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
         Mockito.verify(studentMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenNull_WhenUpdateStudent_ThenThrowError() {
+    @Override
+    public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When & Then
-        Mockito.when(studentService.updateStudent(id, null)).thenReturn(Optional.empty());
+        Mockito.when(studentService.updateRecord(id, null)).thenReturn(Optional.empty());
         Mockito.when(studentMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(null);
-        Assertions.assertThatThrownBy(() -> studentController.updateStudent(id, null))
+        Assertions.assertThatThrownBy(() -> studentController.updateRecord(id, null))
                 .isInstanceOf(InternalServerErrorException.class)
                 .hasMessage("Something went wrong");
-        Mockito.verify(studentService).updateStudent(id, null);
+        Mockito.verify(studentService).updateRecord(id, null);
     }
 
     @Test
-    void testGiveId_WhenDeleteStudent_ThenReturnTrue() throws IOException {
+    @Override
+    public void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
         List<Student> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Student.class));
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(15);
 
         // When
-        Mockito.when(studentService.deleteStudent(expectedStudent.getId())).thenReturn(true);
-        ResponseEntity<Boolean> flag = studentController.deleteStudent(expectedStudent.getId());
+        Mockito.when(studentService.deleteRecordById(expectedStudent.getId())).thenReturn(true);
+        ResponseEntity<ResponseDTO> response = studentController.deleteRecordById(expectedStudent.getId());
 
         // Then
-        Assertions.assertThat(flag.getBody()).isTrue();
-        Mockito.verify(studentService).deleteStudent(expectedStudent.getId());
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        Assertions.assertThat(response.getBody()).isNotNull();
+        Assertions.assertThat(response.getBody().getMessage()).isEqualTo("Record deleted with id " + expectedStudent.getId());
+        Mockito.verify(studentService).deleteRecordById(expectedStudent.getId());
     }
 
     @Test
-    void testGiveRandomId_WhenDeleteStudent_ThenReturnFalse() {
+    @Override
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When
-        Mockito.when(studentService.deleteStudent(id)).thenReturn(false);
-        ResponseEntity<Boolean> flag = studentController.deleteStudent(id);
+        Mockito.when(studentService.deleteRecordById(id)).thenReturn(false);
+        Assertions.assertThatThrownBy(() -> studentController.deleteRecordById(id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with id " + id);
 
         // Then
-        Assertions.assertThat(flag.getBody()).isFalse();
-        Mockito.verify(studentService).deleteStudent(id);
+        Mockito.verify(studentService).deleteRecordById(id);
+    }
+
+    @Test
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
+        // Given & When
+        Mockito.doNothing().when(studentService).deleteAllRecords();
+
+        // Then
+        ResponseEntity<Void> response = studentController.deleteAllRecords();
+
+        // Then
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
     }
 
 
-    private void assertStudent(Student expectedStudent, StudentDTO actualStudent) {
-        Assertions.assertThat(actualStudent).isNotNull();
-        Assertions.assertThat(actualStudent.getRollNo()).isEqualTo(expectedStudent.getRollNo());
-        Assertions.assertThat(actualStudent.getFirstName()).isEqualTo(expectedStudent.getFirstName());
-        Assertions.assertThat(actualStudent.getLastName()).isEqualTo(expectedStudent.getLastName());
-        Assertions.assertThat(actualStudent.getDateOfBirth()).isEqualTo(expectedStudent.getDateOfBirth().format(DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)));
-        Assertions.assertThat(actualStudent.getMarks()).isEqualTo(expectedStudent.getMarks());
+    public void assertRecord(Student expectedRecord, StudentDTO actualRecord) {
+        Assertions.assertThat(actualRecord).isNotNull();
+        Assertions.assertThat(actualRecord.getRollNo()).isEqualTo(expectedRecord.getRollNo());
+        Assertions.assertThat(actualRecord.getFirstName()).isEqualTo(expectedRecord.getFirstName());
+        Assertions.assertThat(actualRecord.getLastName()).isEqualTo(expectedRecord.getLastName());
+        Assertions.assertThat(actualRecord.getDateOfBirth()).isEqualTo(expectedRecord.getDateOfBirth().format(DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)));
+        Assertions.assertThat(actualRecord.getMarks()).isEqualTo(expectedRecord.getMarks());
     }
 }

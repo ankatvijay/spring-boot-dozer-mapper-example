@@ -22,11 +22,12 @@ import org.springframework.data.domain.ExampleMatcher;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @DataJpaTest
 //@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
-class SuperHeroRepositoryTest {
+class SuperHeroRepositoryTest implements BaseRepositoryTest<SuperHero> {
 
     @Autowired
     private SuperHeroRepository superHeroRepository;
@@ -39,8 +40,9 @@ class SuperHeroRepositoryTest {
         superHeroRepository.deleteAll();
     }
 
+    @Override
     @Test
-    void testGivenNon_WhenFindAll_ThenReturnAllRecord() throws IOException {
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
         // Given
         List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         superHeroRepository.saveAll(superHeroes);
@@ -67,8 +69,9 @@ class SuperHeroRepositoryTest {
                 .containsExactly(expectedSuperHeros);
     }
 
+    @Override
     @Test
-    void testGivenId_WhenFindById_ThenReturnRecord() throws IOException {
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
         // Given
         List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
@@ -78,11 +81,25 @@ class SuperHeroRepositoryTest {
         SuperHero actualSuperHero = superHeroRepository.findById(expectedSuperHero.getId()).orElseGet(SuperHero::new);
 
         // Then
-        assertSuperHero(expectedSuperHero, actualSuperHero);
+        assertRecord(expectedSuperHero, actualSuperHero);
     }
 
+    @Override
     @Test
-    void testGivenId_WhenExistsById_ThenReturnRecord() throws IOException {
+    public void testGivenRandomId_WhenGetRecordsById_ThenReturnEmpty() {
+        // Given
+        int id = RandomUtils.nextInt();
+
+        // When
+        Optional<SuperHero> actualSuperHero = superHeroRepository.findById(id);
+
+        // Then
+        Assertions.assertThat(actualSuperHero).isEmpty();
+    }
+
+    @Override
+    @Test
+    public void testGivenId_WhenExistRecordById_ThenReturnTrue() throws IOException {
         // Given
         List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
@@ -96,8 +113,9 @@ class SuperHeroRepositoryTest {
         Assertions.assertThat(actualSuperHero).isTrue();
     }
 
+    @Override
     @Test
-    void testGivenRandomId_WhenExistsById_ThenReturnRecord() {
+    public void testGivenRandomId_WhenExistRecordById_ThenReturnFalse() {
         // Given
         Integer id = RandomUtils.nextInt();
 
@@ -109,8 +127,9 @@ class SuperHeroRepositoryTest {
         Assertions.assertThat(actualSuperHero).isFalse();
     }
 
+    @Override
     @Test
-    void testGivenExample_WhenFindByExample_ThenReturn1Record() throws IOException {
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
         // Given
         List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
@@ -124,13 +143,28 @@ class SuperHeroRepositoryTest {
         Assertions.assertThat(actualSuperHeros).isNotNull();
         Assertions.assertThat(actualSuperHeros).isNotEmpty();
         Assertions.assertThat(actualSuperHeros.size()).isEqualTo(1);
-        assertSuperHero(expectedSuperHero, actualSuperHeros.get(0));
+        assertRecord(expectedSuperHero, actualSuperHeros.get(0));
     }
 
+    @Override
+    @Test
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenReturnEmptyListRecords() {
+        // Given
+        SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
 
+        // When
+        Example<SuperHero> superHeroExample = Example.of(expectedSuperHero, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING));
+        List<SuperHero> actualSuperHeros = superHeroRepository.findAll(superHeroExample);
+
+        // Then
+        Assertions.assertThat(actualSuperHeros).isNotNull();
+        Assertions.assertThat(actualSuperHeros).isEmpty();
+    }
+
+    @Override
     @ParameterizedTest
     @MethodSource(value = "generateExample")
-    void testGivenExample_WhenFindByExample_ThenReturn2Record(Example<SuperHero> superHeroExample, int count) throws IOException {
+    public void testGivenMultipleExample_WhenGetAllRecordsByExample_ThenReturnListRecord(Example<SuperHero> superHeroExample, int count) throws IOException {
         // Given
         List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         superHeroRepository.saveAll(superHeroes);
@@ -158,8 +192,9 @@ class SuperHeroRepositoryTest {
                 .containsExactly(expectedTupleSuperHeros);
     }
 
+    @Override
     @Test
-    void test_saveGivenSuperHero_WhenSave_ThenReturnSuperHero() {
+    public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() {
         // Given
         SuperHero expectedSuperHero = new SuperHero("Natasha", "Black Widow", "Agent", 35, false);
 
@@ -167,11 +202,45 @@ class SuperHeroRepositoryTest {
         SuperHero actualSuperHero = superHeroRepository.save(expectedSuperHero);
 
         // Then
-        assertSuperHero(expectedSuperHero, actualSuperHero);
+        assertRecord(expectedSuperHero, actualSuperHero);
     }
 
+    @Override
     @Test
-    void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
+    public void testGivenExistingRecordAndUpdate_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
+        // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
+        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
+        SuperHero expectedSuperHero = superHeroRepository.save(superHero);
+        expectedSuperHero.setAge(50);
+
+        // When
+        SuperHero actualSuperHero = superHeroRepository.save(expectedSuperHero);
+
+        // Then
+        assertRecord(expectedSuperHero, actualSuperHero);
+    }
+
+    @Override
+    @Test
+    public void testGivenIdAndUpdatedRecord_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
+        // Given
+        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
+        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
+        SuperHero savedSuperHero = superHeroRepository.save(superHero);
+
+        // When
+        SuperHero expectedSuperHero = superHeroRepository.findById(savedSuperHero.getId()).orElseGet(SuperHero::new);
+        expectedSuperHero.setAge(18);
+        SuperHero actualSuperHero = superHeroRepository.save(expectedSuperHero);
+
+        // Then
+        assertRecord(expectedSuperHero, actualSuperHero);
+    }
+
+    @Override
+    @Test
+    public void testGivenId_WhenDeleteRecord_ThenReturnFalse() throws IOException {
         // Given
         List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
         SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
@@ -185,24 +254,21 @@ class SuperHeroRepositoryTest {
         Assertions.assertThat(deletedSuperHero).isFalse();
     }
 
+    @Override
     @Test
-    void testGivenId_WhenEditRecord_ThenReturnEditedRecord() throws IOException {
+    public void testGivenRandomId_WhenDeleteRecord_ThenThrowException() {
         // Given
-        List<SuperHero> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHero.class));
-        SuperHero superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHero::new);
-        SuperHero savedSuperHero = superHeroRepository.save(superHero);
+        Integer id = RandomUtils.nextInt();
 
-        // When
-        SuperHero expectedSuperHero = superHeroRepository.findById(savedSuperHero.getId()).orElseGet(SuperHero::new);
-        expectedSuperHero.setAge(18);
-        SuperHero actualSuperHero = superHeroRepository.save(expectedSuperHero);
-
-        // Then
-        assertSuperHero(expectedSuperHero, actualSuperHero);
+        // When & Then
+        Assertions.assertThatThrownBy(() -> superHeroRepository.deleteById(id))
+                .isInstanceOf(EmptyResultDataAccessException.class)
+                .hasMessage(String.format("No class com.spring.crud.demo.model.SuperHero entity with id %d exists!", id));
     }
 
+    @Override
     @Test
-    void testGivenNon_WhenFindAll_ThenReturnEmptyRecord() {
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
         // Given
         superHeroRepository.deleteAll();
 
@@ -214,18 +280,7 @@ class SuperHeroRepositoryTest {
         Assertions.assertThat(superHeros.size()).isEqualTo(0);
     }
 
-    @Test
-    void testGivenId_WhenDeleteId_ThenThrowException() {
-        // Given
-        Integer id = RandomUtils.nextInt();
-
-        // When & Then
-        Assertions.assertThatThrownBy(() -> superHeroRepository.deleteById(id))
-                .isInstanceOf(EmptyResultDataAccessException.class)
-                .hasMessage(String.format("No class com.spring.crud.demo.model.SuperHero entity with id %d exists!", id));
-    }
-
-    private static Stream<Arguments> generateExample() {
+    static Stream<Arguments> generateExample() {
         SuperHero canFlySuperHeros = new SuperHero();
         canFlySuperHeros.setCanFly(true);
 
@@ -238,12 +293,13 @@ class SuperHeroRepositoryTest {
         );
     }
 
-    private void assertSuperHero(SuperHero expectedSuperHero, SuperHero actualSuperHero) {
-        Assertions.assertThat(actualSuperHero).isNotNull();
-        Assertions.assertThat(actualSuperHero.getName()).isEqualTo(expectedSuperHero.getName());
-        Assertions.assertThat(actualSuperHero.getSuperName()).isEqualTo(expectedSuperHero.getSuperName());
-        Assertions.assertThat(actualSuperHero.getProfession()).isEqualTo(expectedSuperHero.getProfession());
-        Assertions.assertThat(actualSuperHero.getAge()).isEqualTo(expectedSuperHero.getAge());
-        Assertions.assertThat(actualSuperHero.getCanFly()).isEqualTo(expectedSuperHero.getCanFly());
+    @Override
+    public void assertRecord(SuperHero expectedRecord, SuperHero actualRecord) {
+        Assertions.assertThat(actualRecord).isNotNull();
+        Assertions.assertThat(actualRecord.getName()).isEqualTo(expectedRecord.getName());
+        Assertions.assertThat(actualRecord.getSuperName()).isEqualTo(expectedRecord.getSuperName());
+        Assertions.assertThat(actualRecord.getProfession()).isEqualTo(expectedRecord.getProfession());
+        Assertions.assertThat(actualRecord.getAge()).isEqualTo(expectedRecord.getAge());
+        Assertions.assertThat(actualRecord.getCanFly()).isEqualTo(expectedRecord.getCanFly());
     }
 }

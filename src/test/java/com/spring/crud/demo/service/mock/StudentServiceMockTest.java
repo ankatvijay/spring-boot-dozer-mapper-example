@@ -7,6 +7,9 @@ import com.spring.crud.demo.exception.NotFoundException;
 import com.spring.crud.demo.exception.RecordFoundException;
 import com.spring.crud.demo.model.Student;
 import com.spring.crud.demo.repository.StudentRepository;
+import com.spring.crud.demo.service.BaseServiceTest;
+import com.spring.crud.demo.service.StudentService;
+import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
@@ -15,20 +18,27 @@ import org.assertj.core.groups.Tuple;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @ExtendWith(MockitoExtension.class)
-class StudentServiceTest {
+class StudentServiceMockTest implements BaseServiceTest<Student> {
 
     @Mock
     private StudentRepository studentRepository;
@@ -54,12 +64,13 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenNon_WhenFindAllStudents_ThenReturnAllRecord() {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() {
         // Given
 
         // When
         Mockito.when(studentRepository.findAll()).thenReturn(students);
-        List<Student> students = studentService.findAllStudents();
+        List<Student> students = studentService.getAllRecords();
 
         // Then
         Assertions.assertThat(students).isNotNull();
@@ -75,69 +86,75 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenId_WhenFindStudentById_ThenReturnRecord() {
+    @Override
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() {
         // Given
         int id = 12;
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
 
         // When
         Mockito.when(studentRepository.findById(id)).thenReturn(Optional.of(expectedStudent));
-        Student actualStudent = studentService.findStudentById(id).orElseGet(Student::new);
+        Student actualStudent = studentService.getRecordsById(id).orElseGet(Student::new);
 
         // Then
-        assertStudent(expectedStudent, actualStudent);
+        assertRecord(expectedStudent, actualStudent);
         Mockito.verify(studentRepository).findById(id);
     }
 
     @Test
-    void testGivenId_WhenFindStudentByRollNo_ThenReturnRecord() {
-        // Given
-        int rollNo = 12;
-        Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
-
-        // When
-        Mockito.when(studentRepository.findByRollNo(rollNo)).thenReturn(Optional.of(expectedStudent));
-        Student actualStudent = studentService.findStudentByRollNo(rollNo).orElseGet(Student::new);
-
-        // Then
-        assertStudent(expectedStudent, actualStudent);
-        Mockito.verify(studentRepository).findByRollNo(rollNo);
-    }
-
-    @Test
-    void testGivenRandomId_WhenFindStudentById_ThenReturnRecord() {
+    @Override
+    public void testGivenRandomId_WhenGetRecordsById_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When & Then
         Mockito.when(studentRepository.findById(id)).thenReturn(Optional.empty());
-        Assertions.assertThatThrownBy(() -> studentService.findStudentById(id))
+        Assertions.assertThatThrownBy(() -> studentService.getRecordsById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
         Mockito.verify(studentRepository).findById(id);
     }
 
     @Test
-    void testGivenRandomId_WhenFindStudentByRollNo_ThenReturnRecord() {
+    @Override
+    public void testGivenId_WhenExistRecordById_ThenReturnTrue() {
         // Given
-        int rollNo = RandomUtils.nextInt();
+        Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
+        expectedStudent.setId(25);
 
-        // When & Then
-        Mockito.when(studentRepository.findByRollNo(rollNo)).thenReturn(Optional.empty());
-        Assertions.assertThatThrownBy(() -> studentService.findStudentByRollNo(rollNo))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessage("No record found with rollNo " + rollNo);
-        Mockito.verify(studentRepository).findByRollNo(rollNo);
+        // When
+        Mockito.when(studentRepository.existsById(expectedStudent.getId())).thenReturn(true);
+        Boolean actualStudent = studentRepository.existsById(expectedStudent.getId());
+
+        // Then
+        Assertions.assertThat(actualStudent).isNotNull();
+        Assertions.assertThat(actualStudent).isTrue();
     }
 
     @Test
-    void testGivenStudent_WhenFindStudentsByExample_ThenReturnRecords() {
+    @Override
+    public void testGivenRandomId_WhenExistRecordById_ThenReturnFalse() {
+        // Given
+        Integer id = RandomUtils.nextInt();
+
+        // When
+        Mockito.when(studentRepository.existsById(id)).thenReturn(false);
+        Boolean actualStudent = studentRepository.existsById(id);
+
+        // Then
+        Assertions.assertThat(actualStudent).isNotNull();
+        Assertions.assertThat(actualStudent).isFalse();
+    }
+
+    @Test
+    @Override
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
 
         // When
         Mockito.when(studentRepository.findAll((Example) Mockito.any())).thenReturn(List.of(expectedStudent));
-        List<Student> actualStudents = studentService.findStudentsByExample(expectedStudent);
+        List<Student> actualStudents = studentService.getAllRecordsByExample(expectedStudent);
 
         // Then
         Assertions.assertThat(actualStudents).isNotNull();
@@ -148,14 +165,15 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenRandomStudent_WhenFindStudentByExample_ThenReturnRecords() {
+    @Override
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenReturnEmptyListRecords() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         List<Student> students = new ArrayList<>();
 
         // When
         Mockito.when(studentRepository.findAll((Example) Mockito.any())).thenReturn(students);
-        List<Student> actualStudents = studentService.findStudentsByExample(expectedStudent);
+        List<Student> actualStudents = studentService.getAllRecordsByExample(expectedStudent);
 
         // Then
         Assertions.assertThat(actualStudents).isNotNull();
@@ -164,29 +182,61 @@ class StudentServiceTest {
         Mockito.verify(studentRepository).findAll((Example) Mockito.any());
     }
 
+    @ParameterizedTest
+    @MethodSource(value = "generateExample")
+    public void testGivenMultipleExample_WhenGetAllRecordsByExample_ThenReturnListRecord(Example<Student> example, int count) {
+        // Given
+        List<Student> expectedStudentes = students.stream().filter(student -> student.getDateOfBirth().equals(example.getProbe().getDateOfBirth())).toList();
+        Tuple[] expectedTupleStudents = expectedStudentes.stream()
+                .map(student -> AssertionsForClassTypes.tuple(student.getRollNo(),
+                        student.getFirstName(),
+                        student.getLastName(),
+                        student.getDateOfBirth(),
+                        student.getMarks()))
+                .toArray(Tuple[]::new);
+
+        // When
+        Mockito.when(studentRepository.findAll((Example) Mockito.any())).thenReturn(expectedStudentes);
+        List<Student> actualStudents = studentService.getAllRecordsByExample(example.getProbe());
+
+        // Then
+        Assertions.assertThat(actualStudents).isNotNull();
+        Assertions.assertThat(actualStudents.size()).isEqualTo(count);
+        Assertions.assertThat(actualStudents)
+                .extracting(Student::getRollNo,
+                        Student::getFirstName,
+                        Student::getLastName,
+                        Student::getDateOfBirth,
+                        Student::getMarks)
+                .containsExactly(expectedTupleStudents);
+        Mockito.verify(studentRepository).findAll((Example) Mockito.any());
+    }
+
     @Test
-    void testGivenStudent_WhenSaveStudent_ThenReturnNewStudent() {
+    @Override
+    public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
 
         // When
         Mockito.when(studentRepository.save(expectedStudent)).thenReturn(expectedStudent);
-        Student actualStudent = studentService.saveStudent(expectedStudent).orElseGet(Student::new);
+        Student actualStudent = studentService.insertRecord(expectedStudent).orElseGet(Student::new);
 
         // Then
-        assertStudent(expectedStudent, actualStudent);
+        assertRecord(expectedStudent, actualStudent);
         Mockito.verify(studentRepository).save(expectedStudent);
     }
 
     @Test
-    void testGivenExistingStudent_WhenSaveStudent_ThenThrowError() {
+    @Override
+    public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
 
         // When
         Mockito.when(studentRepository.existsById(expectedStudent.getId())).thenReturn(true);
-        Assertions.assertThatThrownBy(() -> studentService.saveStudent(expectedStudent))
+        Assertions.assertThatThrownBy(() -> studentService.insertRecord(expectedStudent))
                 .isInstanceOf(RecordFoundException.class)
                 .hasMessage("Record already found with id " + expectedStudent.getId());
 
@@ -195,7 +245,8 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGivenExistingStudent_WhenUpdateStudent_ThenReturnUpdatedStudent() {
+    @Override
+    public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
@@ -203,40 +254,43 @@ class StudentServiceTest {
         // When
         Mockito.when(studentRepository.existsById(expectedStudent.getId())).thenReturn(true);
         Mockito.when(studentRepository.save(expectedStudent)).thenReturn(expectedStudent);
-        Student actualStudent = studentService.updateStudent(expectedStudent.getId(), expectedStudent).orElseGet(Student::new);
+        Student actualStudent = studentService.updateRecord(expectedStudent.getId(), expectedStudent).orElseGet(Student::new);
 
         // Then
-        assertStudent(expectedStudent, actualStudent);
+        assertRecord(expectedStudent, actualStudent);
         Mockito.verify(studentRepository).existsById(expectedStudent.getId());
         Mockito.verify(studentRepository).save(expectedStudent);
     }
 
     @Test
-    void testGivenNull_WhenUpdateStudent_ThenThrowError() {
+    @Override
+    public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When & Then
-        Assertions.assertThatThrownBy(() -> studentService.updateStudent(id, null))
+        Assertions.assertThatThrownBy(() -> studentService.updateRecord(id, null))
                 .isInstanceOf(NullPointerException.class)
                 .hasMessage("Payload record id is null");
     }
 
     @Test
-    void testGivenStudentAndIdDifferent_WhenUpdateStudent_ThenThrowError() {
+    @Override
+    public void testGivenExistingRecordAndRandomId_WhenUpdateRecord_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
 
         // When & Then
-        Assertions.assertThatThrownBy(() -> studentService.updateStudent(id, expectedStudent))
+        Assertions.assertThatThrownBy(() -> studentService.updateRecord(id, expectedStudent))
                 .isInstanceOf(InternalServerErrorException.class)
                 .hasMessage("Update Record id: " + id + " not equal to payload id: " + expectedStudent.getId());
     }
 
     @Test
-    void testGivenStudentAndId_WhenUpdateStudent_ThenThrowError() {
+    @Override
+    public void testGivenRecordIdAndRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
@@ -245,21 +299,22 @@ class StudentServiceTest {
         Mockito.when(studentRepository.existsById(expectedStudent.getId())).thenReturn(false);
 
         // Then
-        Assertions.assertThatThrownBy(() -> studentService.updateStudent(expectedStudent.getId(), expectedStudent))
+        Assertions.assertThatThrownBy(() -> studentService.updateRecord(expectedStudent.getId(), expectedStudent))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + expectedStudent.getId());
         Mockito.verify(studentRepository).existsById(expectedStudent.getId());
     }
 
     @Test
-    void testGiveId_WhenDeleteStudent_ThenReturnTrue() {
+    @Override
+    public void testGivenId_WhenDeleteRecord_ThenReturnTrue() {
         // Given
         Student expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(Student::new);
         expectedStudent.setId(25);
 
         // When
         Mockito.when(studentRepository.existsById(expectedStudent.getId())).thenReturn(true);
-        Boolean flag = studentService.deleteStudent(expectedStudent.getId());
+        Boolean flag = studentService.deleteRecordById(expectedStudent.getId());
 
         // Then
         Assertions.assertThat(flag).isTrue();
@@ -267,13 +322,14 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGiveRandomId_WhenDeleteStudent_ThenReturnFalse() {
+    @Override
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When
         Mockito.when(studentRepository.existsById(id)).thenReturn(false);
-        Boolean flag = studentService.deleteStudent(id);
+        Boolean flag = studentService.deleteRecordById(id);
 
         // Then
         Assertions.assertThat(flag).isFalse();
@@ -281,23 +337,33 @@ class StudentServiceTest {
     }
 
     @Test
-    void testGiveNon_WhenDeleteAllStudent_ThenReturnNon() {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
         // Given
 
         // When
         Mockito.doNothing().when(studentRepository).deleteAll();
-        studentService.deleteAllStudent();
+        studentService.deleteAllRecords();
 
         // Then
         Mockito.verify(studentRepository).deleteAll();
     }
 
-    private void assertStudent(Student expectedStudent, Student actualStudent) {
-        Assertions.assertThat(actualStudent).isNotNull();
-        Assertions.assertThat(actualStudent.getRollNo()).isEqualTo(expectedStudent.getRollNo());
-        Assertions.assertThat(actualStudent.getFirstName()).isEqualTo(expectedStudent.getFirstName());
-        Assertions.assertThat(actualStudent.getLastName()).isEqualTo(expectedStudent.getLastName());
-        Assertions.assertThat(actualStudent.getDateOfBirth()).isEqualTo(expectedStudent.getDateOfBirth());
-        Assertions.assertThat(actualStudent.getMarks()).isEqualTo(expectedStudent.getMarks());
+    private static Stream<Arguments> generateExample() {
+        Student studentWithDateOfBirth = new Student();
+        studentWithDateOfBirth.setDateOfBirth(LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)));
+
+        return Stream.of(
+                Arguments.of(Example.of(studentWithDateOfBirth, ExampleMatcher.matching().withIgnoreCase().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING)), 10)
+        );
+    }
+
+    public void assertRecord(Student expectedRecord, Student actualRecord) {
+        Assertions.assertThat(actualRecord).isNotNull();
+        Assertions.assertThat(actualRecord.getRollNo()).isEqualTo(expectedRecord.getRollNo());
+        Assertions.assertThat(actualRecord.getFirstName()).isEqualTo(expectedRecord.getFirstName());
+        Assertions.assertThat(actualRecord.getLastName()).isEqualTo(expectedRecord.getLastName());
+        Assertions.assertThat(actualRecord.getDateOfBirth()).isEqualTo(expectedRecord.getDateOfBirth());
+        Assertions.assertThat(actualRecord.getMarks()).isEqualTo(expectedRecord.getMarks());
     }
 }

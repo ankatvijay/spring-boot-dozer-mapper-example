@@ -2,16 +2,17 @@ package com.spring.crud.demo.controller.mock;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import com.spring.crud.demo.controller.BaseControllerTest;
 import com.spring.crud.demo.controller.EmployeeController;
+import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.emp.EmployeeDTO;
 import com.spring.crud.demo.dto.emp.PhoneNumberDTO;
 import com.spring.crud.demo.exception.InternalServerErrorException;
 import com.spring.crud.demo.exception.NotFoundException;
-import com.spring.crud.demo.mapper.emp.EmployeeMapper;
+import com.spring.crud.demo.mapper.EmployeeMapper;
 import com.spring.crud.demo.model.emp.Employee;
 import com.spring.crud.demo.model.emp.PhoneNumber;
-import com.spring.crud.demo.service.IEmployeeService;
-import com.spring.crud.demo.service.impl.EmployeeService;
+import com.spring.crud.demo.service.EmployeeService;
 import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
@@ -31,17 +32,16 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
-class EmployeeControllerTest {
+class EmployeeControllerTest implements BaseControllerTest<Employee, EmployeeDTO> {
 
     private static File file;
     private static ObjectMapper objectMapper;
     private static TypeFactory typeFactory;
     private static EmployeeMapper employeeMapper;
-    private static IEmployeeService employeeService;
+    private static EmployeeService employeeService;
     private static EmployeeController employeeController;
 
     @BeforeAll
@@ -56,7 +56,8 @@ class EmployeeControllerTest {
     }
 
     @Test
-    void testGivenNon_WhenFindAllEmployees_ThenReturnAllRecord() throws IOException {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
         // Given
         List<Employee> employeees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Tuple[] expectedEmployees = employeees.stream()
@@ -79,9 +80,9 @@ class EmployeeControllerTest {
                 .toArray(Tuple[]::new);
 
         // When
-        Mockito.when(employeeService.findAllEmployees()).thenReturn(employeees);
+        Mockito.when(employeeService.getAllRecords()).thenReturn(employeees);
         employeees.forEach(employee -> Mockito.when(employeeMapper.convertFromEntityToDto(employee)).thenReturn(objectMapper.convertValue(employee, EmployeeDTO.class)));
-        ResponseEntity<List<EmployeeDTO>> actualEmployees = employeeController.findAllEmployees();
+        ResponseEntity<List<EmployeeDTO>> actualEmployees = employeeController.getAllRecords();
 
         // Then
         Assertions.assertThat(actualEmployees.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -104,80 +105,85 @@ class EmployeeControllerTest {
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()
                 )
                 .containsExactly(expectedEmployees);
-        Mockito.verify(employeeService, Mockito.atLeastOnce()).findAllEmployees();
+        Mockito.verify(employeeService, Mockito.atLeastOnce()).getAllRecords();
         employeees.forEach(employee -> Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromEntityToDto(employee));
     }
 
     @Test
-    void testGivenNon_WhenFindAllEmployees_ThenReturnError() {
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenThrowException() {
         // Given
         List<Employee> employeeList = new ArrayList<>();
 
         // When & Then
-        Mockito.when(employeeService.findAllEmployees()).thenReturn(employeeList);
-        Assertions.assertThatThrownBy(() -> employeeController.findAllEmployees())
+        Mockito.when(employeeService.getAllRecords()).thenReturn(employeeList);
+        Assertions.assertThatThrownBy(() -> employeeController.getAllRecords())
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found");
-        Mockito.verify(employeeService, Mockito.atLeastOnce()).findAllEmployees();
+        Mockito.verify(employeeService, Mockito.atLeastOnce()).getAllRecords();
     }
 
     @Test
-    void testGivenId_WhenFindEmployeeById_ThenReturnRecord() throws IOException {
+    @Override
+    public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
         // Given
         int id = 12;
         List<Employee> employeees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee expectedEmployee = employeees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
 
         // When
-        Mockito.when(employeeService.findEmployeeById(id)).thenReturn(Optional.of(expectedEmployee));
+        Mockito.when(employeeService.getRecordsById(id)).thenReturn(Optional.of(expectedEmployee));
         Mockito.when(employeeMapper.convertFromEntityToDto(expectedEmployee)).thenReturn(objectMapper.convertValue(expectedEmployee, EmployeeDTO.class));
-        ResponseEntity<EmployeeDTO> actualEmployee = employeeController.findEmployeeById(id);
+        ResponseEntity<EmployeeDTO> actualEmployee = employeeController.getRecordsById(id);
 
         // Then
         Assertions.assertThat(actualEmployee.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualEmployee.getBody()).isNotNull();
-        assertEmployee(expectedEmployee, actualEmployee.getBody());
-        Mockito.verify(employeeService).findEmployeeById(id);
+        assertRecord(expectedEmployee, actualEmployee.getBody());
+        Mockito.verify(employeeService).getRecordsById(id);
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromEntityToDto(expectedEmployee);
     }
 
     @Test
-    void testGivenRandomId_WhenFindEmployeeById_ThenReturnRecord() {
+    @Override
+    public void testGivenRandomId_WhenGetRecordsById_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When & Then
-        Mockito.when(employeeService.findEmployeeById(id)).thenReturn(Optional.empty());
-        Assertions.assertThatThrownBy(() -> employeeController.findEmployeeById(id))
+        Mockito.when(employeeService.getRecordsById(id)).thenReturn(Optional.empty());
+        Assertions.assertThatThrownBy(() -> employeeController.getRecordsById(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with id " + id);
     }
 
     @Test
-    void testGivenEmployee_WhenFindEmployeesByExample_ThenReturnRecords() throws IOException {
+    @Override
+    public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
         // Given
         List<Employee> employeees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee expectedEmployee = employeees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
-        Map<String, Object> map = new ObjectMapper().convertValue(expectedEmployee, Map.class);
+        EmployeeDTO map = new ObjectMapper().convertValue(expectedEmployee, EmployeeDTO.class);
 
         // When
-        Mockito.when(employeeService.findEmployeesByExample(expectedEmployee)).thenReturn(List.of(expectedEmployee));
+        Mockito.when(employeeService.getAllRecordsByExample(expectedEmployee)).thenReturn(List.of(expectedEmployee));
         Mockito.when(employeeMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedEmployee);
         Mockito.when(employeeMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(map, EmployeeDTO.class));
-        ResponseEntity<List<EmployeeDTO>> actualEmployees = employeeController.findEmployeesByExample(map);
+        ResponseEntity<List<EmployeeDTO>> actualEmployees = employeeController.getAllRecordsByExample(map);
 
         // Then
         Assertions.assertThat(actualEmployees.getStatusCode()).isEqualTo(HttpStatus.OK);
         Assertions.assertThat(actualEmployees.getBody()).isNotNull();
         Assertions.assertThat(actualEmployees.getBody().size()).isGreaterThan(0);
-        assertEmployee(expectedEmployee, actualEmployees.getBody().get(0));
-        Mockito.verify(employeeService).findEmployeesByExample(expectedEmployee);
+        assertRecord(expectedEmployee, actualEmployees.getBody().get(0));
+        Mockito.verify(employeeService).getAllRecordsByExample(expectedEmployee);
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenRandomEmployee_WhenFindEmployeesByExample_ThenReturnError() {
+    @Override
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
         // Given
         Employee expectedEmployee = new Employee();
         expectedEmployee.setFirstName("Rahul");
@@ -185,144 +191,165 @@ class EmployeeControllerTest {
         expectedEmployee.setNoOfChildrens(0);
         expectedEmployee.setAge(28);
         expectedEmployee.setSpouse(true);
-        Map<String, Object> map = objectMapper.convertValue(expectedEmployee, Map.class);
+        EmployeeDTO map = objectMapper.convertValue(expectedEmployee, EmployeeDTO.class);
         List<Employee> employeees = new ArrayList<>();
 
         // When & Then
-        Mockito.when(employeeService.findEmployeesByExample(expectedEmployee)).thenReturn(employeees);
+        Mockito.when(employeeService.getAllRecordsByExample(expectedEmployee)).thenReturn(employeees);
         Mockito.when(employeeMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedEmployee);
-        Assertions.assertThatThrownBy(() -> employeeController.findEmployeesByExample(map))
+        Assertions.assertThatThrownBy(() -> employeeController.getAllRecordsByExample(map))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessage("No record found with map " + map);
 
 
-        Mockito.verify(employeeService).findEmployeesByExample(expectedEmployee);
+        Mockito.verify(employeeService).getAllRecordsByExample(expectedEmployee);
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
-    void testGivenEmployee_WhenSaveEmployee_ThenReturnNewEmployee() throws IOException {
+    @Override
+    public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws IOException {
         // Given
         List<Employee> employeees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee expectedEmployee = employeees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
 
         // When
-        Mockito.when(employeeService.saveEmployee(expectedEmployee)).thenReturn(Optional.of(expectedEmployee));
+        Mockito.when(employeeService.insertRecord(expectedEmployee)).thenReturn(Optional.of(expectedEmployee));
         Mockito.when(employeeMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedEmployee);
         Mockito.when(employeeMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(expectedEmployee, EmployeeDTO.class));
-        ResponseEntity<EmployeeDTO> actualEmployee = employeeController.saveEmployee(objectMapper.convertValue(expectedEmployee, EmployeeDTO.class));
+        ResponseEntity<EmployeeDTO> actualEmployee = employeeController.insertRecord(objectMapper.convertValue(expectedEmployee, EmployeeDTO.class));
 
         // Then
         Assertions.assertThat(actualEmployee.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         Assertions.assertThat(actualEmployee.getBody()).isNotNull();
-        assertEmployee(expectedEmployee, actualEmployee.getBody());
-        Mockito.verify(employeeService).saveEmployee(expectedEmployee);
+        assertRecord(expectedEmployee, actualEmployee.getBody());
+        Mockito.verify(employeeService).insertRecord(expectedEmployee);
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenExistingEmployee_WhenSaveEmployee_ThenThrowError() throws IOException {
+    @Override
+    public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() throws IOException {
         // Given
         List<Employee> employeees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee expectedEmployee = employeees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
         expectedEmployee.setId(15);
 
         // When
-        Mockito.when(employeeService.saveEmployee(expectedEmployee)).thenReturn(Optional.empty());
+        Mockito.when(employeeService.insertRecord(expectedEmployee)).thenReturn(Optional.empty());
         Mockito.when(employeeMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedEmployee);
-        Assertions.assertThatThrownBy(() -> employeeController.saveEmployee(objectMapper.convertValue(expectedEmployee, EmployeeDTO.class)))
+        Assertions.assertThatThrownBy(() -> employeeController.insertRecord(objectMapper.convertValue(expectedEmployee, EmployeeDTO.class)))
                 .isInstanceOf(InternalServerErrorException.class)
                 .hasMessage("Something went wrong");
 
         // Then
-        Mockito.verify(employeeService).saveEmployee(expectedEmployee);
+        Mockito.verify(employeeService).insertRecord(expectedEmployee);
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
-    void testGivenExistingEmployee_WhenUpdateEmployee_ThenReturnUpdatedEmployee() throws IOException {
+    @Override
+    public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
         // Given
         List<Employee> employeees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee expectedEmployee = employeees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
         expectedEmployee.setId(15);
 
         // When
-        Mockito.when(employeeService.updateEmployee(expectedEmployee.getId(), expectedEmployee)).thenReturn(Optional.of(expectedEmployee));
+        Mockito.when(employeeService.updateRecord(expectedEmployee.getId(), expectedEmployee)).thenReturn(Optional.of(expectedEmployee));
         Mockito.when(employeeMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedEmployee);
         Mockito.when(employeeMapper.convertFromEntityToDto(Mockito.any())).thenReturn(objectMapper.convertValue(expectedEmployee, EmployeeDTO.class));
-        ResponseEntity<EmployeeDTO> actualEmployee = employeeController.updateEmployee(expectedEmployee.getId(), objectMapper.convertValue(expectedEmployee, EmployeeDTO.class));
+        ResponseEntity<EmployeeDTO> actualEmployee = employeeController.updateRecord(expectedEmployee.getId(), objectMapper.convertValue(expectedEmployee, EmployeeDTO.class));
 
         // Then
         Assertions.assertThat(actualEmployee.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(actualEmployee.getBody()).isNotNull();
-        assertEmployee(expectedEmployee, actualEmployee.getBody());
-        Mockito.verify(employeeService).updateEmployee(expectedEmployee.getId(), expectedEmployee);
+        assertRecord(expectedEmployee, actualEmployee.getBody());
+        Mockito.verify(employeeService).updateRecord(expectedEmployee.getId(), expectedEmployee);
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromEntityToDto(Mockito.any());
     }
 
     @Test
-    void testGivenNull_WhenUpdateEmployee_ThenThrowError() {
+    @Override
+    public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When & Then
-        Mockito.when(employeeService.updateEmployee(id, null)).thenReturn(Optional.empty());
+        Mockito.when(employeeService.updateRecord(id, null)).thenReturn(Optional.empty());
         Mockito.when(employeeMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(null);
-        Assertions.assertThatThrownBy(() -> employeeController.updateEmployee(id, null))
+        Assertions.assertThatThrownBy(() -> employeeController.updateRecord(id, null))
                 .isInstanceOf(InternalServerErrorException.class)
                 .hasMessage("Something went wrong");
-        Mockito.verify(employeeService).updateEmployee(id, null);
+        Mockito.verify(employeeService).updateRecord(id, null);
         Mockito.verify(employeeMapper, Mockito.atLeastOnce()).convertFromDtoToEntity(Mockito.any());
     }
 
     @Test
-    void testGiveId_WhenDeleteEmployee_ThenReturnTrue() throws IOException {
+    @Override
+    public void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
         List<Employee> employeees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, Employee.class));
         Employee expectedEmployee = employeees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(Employee::new);
         expectedEmployee.setId(15);
 
         // When
-        Mockito.when(employeeService.deleteEmployee(expectedEmployee.getId())).thenReturn(true);
-        ResponseEntity<Boolean> flag = employeeController.deleteEmployee(expectedEmployee.getId());
+        Mockito.when(employeeService.deleteRecordById(expectedEmployee.getId())).thenReturn(true);
+        ResponseEntity<ResponseDTO> response = employeeController.deleteRecordById(expectedEmployee.getId());
 
         // Then
-        Assertions.assertThat(flag.getBody()).isTrue();
-        Mockito.verify(employeeService).deleteEmployee(expectedEmployee.getId());
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
+        Assertions.assertThat(response.getBody()).isNotNull();
+        Assertions.assertThat(response.getBody().getMessage()).isEqualTo("Record deleted with id " + expectedEmployee.getId());
+        Mockito.verify(employeeService).deleteRecordById(expectedEmployee.getId());
     }
 
     @Test
-    void testGiveRandomId_WhenDeleteEmployee_ThenReturnFalse() {
+    @Override
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         int id = RandomUtils.nextInt();
 
         // When
-        Mockito.when(employeeService.deleteEmployee(id)).thenReturn(false);
-        ResponseEntity<Boolean> flag = employeeController.deleteEmployee(id);
+        Mockito.when(employeeService.deleteRecordById(id)).thenReturn(false);
+        Assertions.assertThatThrownBy(() -> employeeController.deleteRecordById(id))
+                .isInstanceOf(NotFoundException.class)
+                .hasMessage("No record found with id " + id);
 
         // Then
-        Assertions.assertThat(flag.getBody()).isFalse();
-        Mockito.verify(employeeService).deleteEmployee(id);
+        Mockito.verify(employeeService).deleteRecordById(id);
     }
 
+    @Test
+    @Override
+    public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() {
+        // Given & When
+        Mockito.doNothing().when(employeeService).deleteAllRecords();
 
-    private void assertEmployee(Employee expectedEmployee, EmployeeDTO actualEmployee) {
-        Assertions.assertThat(actualEmployee).isNotNull();
-        Assertions.assertThat(actualEmployee.getFirstName()).isEqualTo(expectedEmployee.getFirstName());
-        Assertions.assertThat(actualEmployee.getLastName()).isEqualTo(expectedEmployee.getLastName());
-        Assertions.assertThat(actualEmployee.getAge()).isEqualTo(expectedEmployee.getAge());
-        Assertions.assertThat(actualEmployee.getNoOfChildrens()).isEqualTo(expectedEmployee.getNoOfChildrens());
-        Assertions.assertThat(actualEmployee.getSpouse()).isEqualTo(expectedEmployee.getSpouse());
-        Assertions.assertThat(actualEmployee.getDateOfJoining()).isEqualTo(expectedEmployee.getDateOfJoining().format(DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
-        Assertions.assertThat(actualEmployee.getHobbies().toArray()).isEqualTo(expectedEmployee.getHobbies().toArray());
-        Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(expectedEmployee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray());
-        Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(expectedEmployee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray());
-        Assertions.assertThat(actualEmployee.getAddress().getStreetAddress()).isEqualTo(expectedEmployee.getAddress().getStreetAddress());
-        Assertions.assertThat(actualEmployee.getAddress().getCity()).isEqualTo(expectedEmployee.getAddress().getCity());
-        Assertions.assertThat(actualEmployee.getAddress().getState()).isEqualTo(expectedEmployee.getAddress().getState());
-        Assertions.assertThat(actualEmployee.getAddress().getCountry()).isEqualTo(expectedEmployee.getAddress().getCountry());
-        Assertions.assertThat(actualEmployee.getAddress().getPostalCode()).isEqualTo(expectedEmployee.getAddress().getPostalCode());
+        // Then
+        ResponseEntity<Void> response = employeeController.deleteAllRecords();
+
+        // Then
+        Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    }
+
+    public void assertRecord(Employee expectedRecord, EmployeeDTO actualRecord) {
+        Assertions.assertThat(actualRecord).isNotNull();
+        Assertions.assertThat(actualRecord.getFirstName()).isEqualTo(expectedRecord.getFirstName());
+        Assertions.assertThat(actualRecord.getLastName()).isEqualTo(expectedRecord.getLastName());
+        Assertions.assertThat(actualRecord.getAge()).isEqualTo(expectedRecord.getAge());
+        Assertions.assertThat(actualRecord.getNoOfChildrens()).isEqualTo(expectedRecord.getNoOfChildrens());
+        Assertions.assertThat(actualRecord.getSpouse()).isEqualTo(expectedRecord.getSpouse());
+        Assertions.assertThat(actualRecord.getDateOfJoining()).isEqualTo(expectedRecord.getDateOfJoining().format(DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
+        Assertions.assertThat(actualRecord.getHobbies().toArray()).isEqualTo(expectedRecord.getHobbies().toArray());
+        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray());
+        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray());
+        Assertions.assertThat(actualRecord.getAddress().getStreetAddress()).isEqualTo(expectedRecord.getAddress().getStreetAddress());
+        Assertions.assertThat(actualRecord.getAddress().getCity()).isEqualTo(expectedRecord.getAddress().getCity());
+        Assertions.assertThat(actualRecord.getAddress().getState()).isEqualTo(expectedRecord.getAddress().getState());
+        Assertions.assertThat(actualRecord.getAddress().getCountry()).isEqualTo(expectedRecord.getAddress().getCountry());
+        Assertions.assertThat(actualRecord.getAddress().getPostalCode()).isEqualTo(expectedRecord.getAddress().getPostalCode());
     }
 }
