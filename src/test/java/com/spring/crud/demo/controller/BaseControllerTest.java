@@ -1,5 +1,7 @@
 package com.spring.crud.demo.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import java.io.IOException;
 
 public interface BaseControllerTest<T, R> {
@@ -15,7 +17,7 @@ public interface BaseControllerTest<T, R> {
 
     void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException;
 
-    void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException();
+    void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() throws JsonProcessingException;
 
     void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws IOException;
 

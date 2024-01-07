@@ -1,6 +1,7 @@
 package com.spring.crud.demo.controller;
 
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.SuperHeroDTO;
@@ -47,11 +48,11 @@ public class SuperHeroController implements BaseController<SuperHeroDTO> {
     }
 
     @Override
-    public ResponseEntity<List<SuperHeroDTO>> getAllRecordsByExample(SuperHeroDTO allRequestParams) {
+    public ResponseEntity<List<SuperHeroDTO>> getAllRecordsByExample(SuperHeroDTO allRequestParams) throws JsonProcessingException {
         SuperHeroDTO superHeroDTO = objectMapper.convertValue(allRequestParams, SuperHeroDTO.class);
         List<SuperHero> superHeroList = superHeroService.getAllRecordsByExample(superHeroMapper.convertFromDtoToEntity(superHeroDTO));
         if (superHeroList.isEmpty()) {
-            throw new NotFoundException("No record found with map " + allRequestParams);
+            throw new NotFoundException("No record found with map " + objectMapper.writeValueAsString(superHeroDTO));
         }
         return ResponseEntity.status(HttpStatus.OK).body(superHeroList.stream().map(superHeroMapper::convertFromEntityToDto).toList());
     }

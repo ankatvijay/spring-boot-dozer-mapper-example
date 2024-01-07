@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.spring.crud.demo.dto.ResponseDTO;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public interface BaseController<T> {
     ResponseEntity<T> getRecordsById(@PathVariable("id") Integer id);
 
     @PostMapping(value = "/search", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
-    ResponseEntity<List<T>> getAllRecordsByExample(@RequestBody T allRequestParams);
+    ResponseEntity<List<T>> getAllRecordsByExample(@RequestBody T allRequestParams) throws JsonProcessingException;
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE}, produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE})
     ResponseEntity<T> insertRecord(@Valid @RequestBody T dto);

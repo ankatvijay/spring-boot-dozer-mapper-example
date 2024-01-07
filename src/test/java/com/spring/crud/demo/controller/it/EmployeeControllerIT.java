@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller.it;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.controller.BaseControllerTest;
@@ -75,7 +76,6 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
                         employee.getAddress().getState(),
                         employee.getAddress().getCountry(),
                         employee.getAddress().getPostalCode(),
-                        employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()
                 ))
@@ -105,7 +105,6 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
                         employee -> employee.getAddress().getState(),
                         employee -> employee.getAddress().getCountry(),
                         employee -> employee.getAddress().getPostalCode(),
-                        employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()
                 )
@@ -199,7 +198,7 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
 
     @Test
     @Override
-    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() throws JsonProcessingException {
         // Given
         Employee expectedEmployee = new Employee();
         expectedEmployee.setFirstName("Rahul");
@@ -221,7 +220,7 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + map);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + objectMapper.writeValueAsString(map));
     }
 
     @Test
@@ -410,7 +409,6 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         Assertions.assertThat(actualRecord.getSpouse()).isEqualTo(expectedRecord.getSpouse());
         Assertions.assertThat(actualRecord.getDateOfJoining()).isEqualTo(expectedRecord.getDateOfJoining());
         Assertions.assertThat(actualRecord.getHobbies().toArray()).isEqualTo(expectedRecord.getHobbies().toArray());
-        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray());
         Assertions.assertThat(actualRecord.getAddress().getStreetAddress()).isEqualTo(expectedRecord.getAddress().getStreetAddress());

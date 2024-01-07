@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller.it;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.controller.BaseControllerTest;
@@ -171,7 +172,7 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
 
     @Test
     @Override
-    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() throws JsonProcessingException {
         // Given
         SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
         SuperHeroDTO map = objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class);
@@ -186,7 +187,7 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + map);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + objectMapper.writeValueAsString(map));
     }
 
     @Test

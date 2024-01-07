@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller.mock;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.controller.BaseControllerTest;
@@ -185,7 +186,7 @@ class EmployeeControllerTest implements BaseControllerTest<Employee, EmployeeDTO
 
     @Test
     @Override
-    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() throws JsonProcessingException {
         // Given
         Employee expectedEmployee = new Employee();
         expectedEmployee.setFirstName("Rahul");
@@ -201,7 +202,7 @@ class EmployeeControllerTest implements BaseControllerTest<Employee, EmployeeDTO
         Mockito.when(employeeMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedEmployee);
         Assertions.assertThatThrownBy(() -> employeeController.getAllRecordsByExample(map))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("No record found with map " + map);
+                .hasMessage("No record found with map " + objectMapper.writeValueAsString(map));
 
 
         Mockito.verify(employeeService).getAllRecordsByExample(expectedEmployee);

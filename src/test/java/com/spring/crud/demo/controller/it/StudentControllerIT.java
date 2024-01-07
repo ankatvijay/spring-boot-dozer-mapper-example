@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller.it;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.controller.BaseControllerTest;
@@ -173,7 +174,7 @@ public class StudentControllerIT implements BaseControllerTest<StudentDTO, Stude
 
     @Test
     @Override
-    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() throws JsonProcessingException {
         // Given
         Student expectedStudent = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
         StudentDTO map = objectMapper.convertValue(expectedStudent, StudentDTO.class);
@@ -188,7 +189,7 @@ public class StudentControllerIT implements BaseControllerTest<StudentDTO, Stude
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
         Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.NOT_FOUND.value());
-        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + map);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + objectMapper.writeValueAsString(map));
     }
 
     @Test

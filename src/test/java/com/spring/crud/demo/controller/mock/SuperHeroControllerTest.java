@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller.mock;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.controller.BaseControllerTest;
@@ -161,7 +162,7 @@ class SuperHeroControllerTest implements BaseControllerTest<SuperHero, SuperHero
 
     @Test
     @Override
-    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() {
+    public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() throws JsonProcessingException {
         // Given
         SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
         SuperHeroDTO map = objectMapper.convertValue(expectedSuperHero, SuperHeroDTO.class);
@@ -172,7 +173,7 @@ class SuperHeroControllerTest implements BaseControllerTest<SuperHero, SuperHero
         Mockito.when(superHeroMapper.convertFromDtoToEntity(Mockito.any())).thenReturn(expectedSuperHero);
         Assertions.assertThatThrownBy(() -> superHeroController.getAllRecordsByExample(map))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("No record found with map " + map);
+                .hasMessage("No record found with map " + objectMapper.writeValueAsString(map));
 
 
         Mockito.verify(superHeroService).getAllRecordsByExample(expectedSuperHero);

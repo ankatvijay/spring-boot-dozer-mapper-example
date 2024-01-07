@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spring.crud.demo.dto.ResponseDTO;
 import com.spring.crud.demo.dto.StudentDTO;
@@ -46,11 +47,11 @@ public class StudentController implements BaseController<StudentDTO> {
     }
 
     @Override
-    public ResponseEntity<List<StudentDTO>> getAllRecordsByExample(StudentDTO allRequestParams) {
+    public ResponseEntity<List<StudentDTO>> getAllRecordsByExample(StudentDTO allRequestParams) throws JsonProcessingException {
         StudentDTO studentDTO = objectMapper.convertValue(allRequestParams, StudentDTO.class);
         List<Student> studentList = studentService.getAllRecordsByExample(studentMapper.convertFromDtoToEntity(studentDTO));
         if (studentList.isEmpty()) {
-            throw new NotFoundException("No record found with map " + allRequestParams);
+            throw new NotFoundException("No record found with map " + objectMapper.writeValueAsString(studentDTO));
         }
         return ResponseEntity.status(HttpStatus.OK).body(studentList.stream().map(studentMapper::convertFromEntityToDto).toList());
     }
