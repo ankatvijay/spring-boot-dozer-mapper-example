@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
@@ -101,8 +101,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found");
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found");
     }
 
     @Test
@@ -141,8 +141,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + id);
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with id " + id);
     }
 
     @Test
@@ -185,8 +185,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with map " + map);
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + map);
     }
 
     @Test
@@ -225,8 +225,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.FOUND.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Record already found with id " + expectedSuperHero.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Record already found with id " + expectedSuperHero.getId());
     }
 
     @Test
@@ -268,8 +268,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(500);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Update Record id: " + id + " not equal to payload id: " + superHero.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(500);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Update Record id: " + id + " not equal to payload id: " + superHero.getId());
     }
 
     @Test
@@ -287,8 +287,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + superHero.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with id " + superHero.getId());
     }
 
     @Test
@@ -307,8 +307,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Payload record id is null");
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Payload record id is null");
     }
 
     @Test
@@ -328,8 +328,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Record deleted with id " + savedSuperHero.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.ACCEPTED.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Record deleted with id " + savedSuperHero.getId());
     }
 
     @Test
@@ -347,8 +347,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + id);
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with id " + id);
     }
 
     @Test

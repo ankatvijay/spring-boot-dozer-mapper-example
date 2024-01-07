@@ -56,6 +56,7 @@ class EmployeeMapperTest {
         Assertions.assertThat(actualEmployee.getSpouse()).isEqualTo(employeeDTO.getSpouse());
         Assertions.assertThat(actualEmployee.getDateOfJoining().format(DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT))).isEqualTo(employeeDTO.getDateOfJoining());
         Assertions.assertThat(actualEmployee.getHobbies().toArray()).isEqualTo(employeeDTO.getHobbies().toArray());
+        Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray()).isEqualTo(employeeDTO.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray());
         Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray()).isEqualTo(employeeDTO.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray());
         Assertions.assertThat(actualEmployee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()).isEqualTo(employeeDTO.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray());
         Assertions.assertThat(actualEmployee.getAddress().getStreetAddress()).isEqualTo(employeeDTO.getAddress().getStreetAddress());
@@ -81,6 +82,7 @@ class EmployeeMapperTest {
         Assertions.assertThat(actualEmployeeDTO.getSpouse()).isEqualTo(employee.getSpouse());
         Assertions.assertThat(actualEmployeeDTO.getDateOfJoining()).isEqualTo(employee.getDateOfJoining().format(DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
         Assertions.assertThat(actualEmployeeDTO.getHobbies().toArray()).isEqualTo(employee.getHobbies().toArray());
+        Assertions.assertThat(actualEmployeeDTO.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray()).isEqualTo(employee.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray());
         Assertions.assertThat(actualEmployeeDTO.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(employee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray());
         Assertions.assertThat(actualEmployeeDTO.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray());
         Assertions.assertThat(actualEmployeeDTO.getAddress().getStreetAddress()).isEqualTo(employee.getAddress().getStreetAddress());

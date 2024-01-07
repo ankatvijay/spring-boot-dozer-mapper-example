@@ -308,7 +308,7 @@ class StudentControllerTest implements BaseControllerTest<Student, StudentDTO> {
         // Then
         Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(response.getBody()).isNotNull();
-        Assertions.assertThat(response.getBody().getMessage()).isEqualTo("Record deleted with id " + expectedStudent.getId());
+        Assertions.assertThat(response.getBody().message()).isEqualTo("Record deleted with id " + expectedStudent.getId());
         Mockito.verify(studentService).deleteRecordById(expectedStudent.getId());
     }
 

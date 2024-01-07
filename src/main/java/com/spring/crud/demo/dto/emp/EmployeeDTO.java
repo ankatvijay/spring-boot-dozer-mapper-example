@@ -1,12 +1,14 @@
 package com.spring.crud.demo.dto.emp;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
 public class EmployeeDTO implements Serializable {
 
     @Mapping(value = "id")

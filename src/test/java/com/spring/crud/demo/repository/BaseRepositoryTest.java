@@ -31,7 +31,7 @@ public interface BaseRepositoryTest<T> {
 
     void testGivenId_WhenDeleteRecord_ThenReturnFalse() throws IOException;
 
-    void testGivenRandomId_WhenDeleteRecord_ThenThrowException();
+    void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse();
 
     void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord();
 

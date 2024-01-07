@@ -275,7 +275,7 @@ class SuperHeroControllerTest implements BaseControllerTest<SuperHero, SuperHero
         // Then
         Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(response.getBody()).isNotNull();
-        Assertions.assertThat(response.getBody().getMessage()).isEqualTo("Record deleted with id " + expectedSuperHero.getId());
+        Assertions.assertThat(response.getBody().message()).isEqualTo("Record deleted with id " + expectedSuperHero.getId());
         Mockito.verify(superHeroService).deleteRecordById(expectedSuperHero.getId());
 
     }

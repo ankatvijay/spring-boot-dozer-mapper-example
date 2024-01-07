@@ -1,11 +1,14 @@
 package com.spring.crud.demo.dto;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
 
-@Data
+@Getter
+@Setter
 public class SuperHeroDTO implements Serializable {
 
     @Mapping(value = "id")

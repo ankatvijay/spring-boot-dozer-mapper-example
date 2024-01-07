@@ -74,6 +74,7 @@ class EmployeeControllerTest implements BaseControllerTest<Employee, EmployeeDTO
                         employee.getAddress().getState(),
                         employee.getAddress().getCountry(),
                         employee.getAddress().getPostalCode(),
+                        employee.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()
                 ))
@@ -101,6 +102,7 @@ class EmployeeControllerTest implements BaseControllerTest<Employee, EmployeeDTO
                         employee -> employee.getAddress().getState(),
                         employee -> employee.getAddress().getCountry(),
                         employee -> employee.getAddress().getPostalCode(),
+                        employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()
                 )
@@ -302,7 +304,7 @@ class EmployeeControllerTest implements BaseControllerTest<Employee, EmployeeDTO
         // Then
         Assertions.assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(response.getBody()).isNotNull();
-        Assertions.assertThat(response.getBody().getMessage()).isEqualTo("Record deleted with id " + expectedEmployee.getId());
+        Assertions.assertThat(response.getBody().message()).isEqualTo("Record deleted with id " + expectedEmployee.getId());
         Mockito.verify(employeeService).deleteRecordById(expectedEmployee.getId());
     }
 
@@ -344,6 +346,7 @@ class EmployeeControllerTest implements BaseControllerTest<Employee, EmployeeDTO
         Assertions.assertThat(actualRecord.getSpouse()).isEqualTo(expectedRecord.getSpouse());
         Assertions.assertThat(actualRecord.getDateOfJoining()).isEqualTo(expectedRecord.getDateOfJoining().format(DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT)));
         Assertions.assertThat(actualRecord.getHobbies().toArray()).isEqualTo(expectedRecord.getHobbies().toArray());
+        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray());
         Assertions.assertThat(actualRecord.getAddress().getStreetAddress()).isEqualTo(expectedRecord.getAddress().getStreetAddress());

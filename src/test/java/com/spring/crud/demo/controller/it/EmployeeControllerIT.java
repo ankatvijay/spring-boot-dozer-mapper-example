@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.server.LocalServerPort;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 
@@ -75,6 +75,7 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
                         employee.getAddress().getState(),
                         employee.getAddress().getCountry(),
                         employee.getAddress().getPostalCode(),
+                        employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()
                 ))
@@ -104,6 +105,7 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
                         employee -> employee.getAddress().getState(),
                         employee -> employee.getAddress().getCountry(),
                         employee -> employee.getAddress().getPostalCode(),
+                        employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()
                 )
@@ -122,8 +124,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found");
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found");
     }
 
     @Test
@@ -164,8 +166,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + id);
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with id " + id);
     }
 
     @Test
@@ -218,8 +220,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with map " + map);
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with map " + map);
     }
 
     @Test
@@ -258,8 +260,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.FOUND.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Record already found with id " + expectedEmployee.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Record already found with id " + expectedEmployee.getId());
     }
 
     @Test
@@ -303,8 +305,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(500);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Update Record id: " + id + " not equal to payload id: " + employee.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(500);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Update Record id: " + id + " not equal to payload id: " + employee.getId());
     }
 
     @Test
@@ -322,8 +324,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(404);
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + employee.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(404);
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with id " + employee.getId());
     }
 
     @Test
@@ -342,8 +344,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Payload record id is null");
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Payload record id is null");
     }
 
     @Test
@@ -363,8 +365,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.ACCEPTED.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("Record deleted with id " + savedEmployee.getId());
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.ACCEPTED.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("Record deleted with id " + savedEmployee.getId());
     }
 
     @Test
@@ -382,8 +384,8 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         // Then
         Assertions.assertThat(responseEntity.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         Assertions.assertThat(responseEntity.getBody()).isNotNull();
-        Assertions.assertThat(responseEntity.getBody().getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
-        Assertions.assertThat(responseEntity.getBody().getMessage()).isEqualTo("No record found with id " + id);
+        Assertions.assertThat(responseEntity.getBody().status()).isEqualTo(HttpStatus.NOT_FOUND.value());
+        Assertions.assertThat(responseEntity.getBody().message()).isEqualTo("No record found with id " + id);
     }
 
     @Test
@@ -408,6 +410,7 @@ public class EmployeeControllerIT implements BaseControllerTest<EmployeeDTO, Emp
         Assertions.assertThat(actualRecord.getSpouse()).isEqualTo(expectedRecord.getSpouse());
         Assertions.assertThat(actualRecord.getDateOfJoining()).isEqualTo(expectedRecord.getDateOfJoining());
         Assertions.assertThat(actualRecord.getHobbies().toArray()).isEqualTo(expectedRecord.getHobbies().toArray());
+        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getId).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getType).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumberDTO::getNumber).toArray());
         Assertions.assertThat(actualRecord.getAddress().getStreetAddress()).isEqualTo(expectedRecord.getAddress().getStreetAddress());

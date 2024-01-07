@@ -78,7 +78,7 @@ public class StudentController implements BaseController<StudentDTO> {
         if (!studentService.deleteRecordById(id)) {
             throw new NotFoundException("No record found with id " + id);
         }
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(ResponseDTO.builder().status(HttpStatus.ACCEPTED.value()).currentDateTime(String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis())).message("Record deleted with id " + id).build());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(new ResponseDTO(HttpStatus.ACCEPTED.value(),String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis()),"Record deleted with id " + id));
     }
 
     @Override

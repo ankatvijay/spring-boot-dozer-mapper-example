@@ -17,7 +17,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 
@@ -439,14 +438,16 @@ class StudentRepositoryTest implements BaseRepositoryTest<Student> {
 
     @Override
     @Test
-    public void testGivenRandomId_WhenDeleteRecord_ThenThrowException() {
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         Integer id = RandomUtils.nextInt();
 
-        // When & Then
-        Assertions.assertThatThrownBy(() -> studentRepository.deleteById(id))
-                .isInstanceOf(EmptyResultDataAccessException.class)
-                .hasMessage(String.format("No class com.spring.crud.demo.model.Student entity with id %d exists!", id));
+        // When
+        studentRepository.deleteById(id);
+        Boolean deletedStudent = studentRepository.existsById(id);
+
+        // Then
+        Assertions.assertThat(deletedStudent).isFalse();
     }
 
     @Override

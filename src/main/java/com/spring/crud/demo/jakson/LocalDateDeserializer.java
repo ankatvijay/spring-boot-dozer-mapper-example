@@ -21,7 +21,7 @@ public class LocalDateDeserializer extends StdDeserializer<LocalDate> {
     public LocalDate deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         //return LocalDate.parse(parser.readValueAs(String.class));
         ObjectCodec oc = parser.getCodec();
-        TextNode node = (TextNode) oc.readTree(parser);
+        TextNode node = oc.readTree(parser);
         String dateString = node.textValue();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constant.DATE_FORMAT);
         return LocalDate.parse(dateString, formatter);

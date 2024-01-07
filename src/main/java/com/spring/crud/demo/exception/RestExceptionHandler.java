@@ -12,24 +12,24 @@ public class RestExceptionHandler {
     @ExceptionHandler(value = {InternalServerErrorException.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseDTO internalServerErrorException(InternalServerErrorException ex) {
-        return ResponseDTO.builder().status(HttpStatus.INTERNAL_SERVER_ERROR.value()).currentDateTime(String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis())).message(ex.getMessage()).build();
+        return new ResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis()),ex.getMessage());
     }
 
     @ExceptionHandler(value = {NotFoundException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ResponseDTO notFoundException(NotFoundException ex) {
-        return ResponseDTO.builder().status(HttpStatus.NOT_FOUND.value()).currentDateTime(String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis())).message(ex.getMessage()).build();
+        return new ResponseDTO(HttpStatus.NOT_FOUND.value(), String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis()), ex.getMessage());
     }
 
     @ExceptionHandler(value = {RecordFoundException.class})
     @ResponseStatus(HttpStatus.FOUND)
     public ResponseDTO foundException(RecordFoundException ex) {
-        return ResponseDTO.builder().status(HttpStatus.FOUND.value()).currentDateTime(String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis())).message(ex.getMessage()).build();
+        return new ResponseDTO(HttpStatus.FOUND.value(), String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis()), ex.getMessage());
     }
 
     @ExceptionHandler(value = {NullPointerException.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ResponseDTO foundNullPointerException(NullPointerException ex) {
-        return ResponseDTO.builder().status(HttpStatus.INTERNAL_SERVER_ERROR.value()).currentDateTime(String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis())).message(ex.getMessage()).build();
+        return new ResponseDTO(HttpStatus.INTERNAL_SERVER_ERROR.value(), String.format("%1$TH:%1$TM:%1$TS", System.currentTimeMillis()), ex.getMessage());
     }
 }

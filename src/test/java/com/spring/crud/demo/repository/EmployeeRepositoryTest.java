@@ -18,7 +18,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 
@@ -66,6 +65,7 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                         employee.getAddress().getState(),
                         employee.getAddress().getCountry(),
                         employee.getAddress().getPostalCode(),
+                        employee.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()
                 ))
@@ -90,6 +90,7 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                         employee -> employee.getAddress().getState(),
                         employee -> employee.getAddress().getCountry(),
                         employee -> employee.getAddress().getPostalCode(),
+                        employee -> employee.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()
                 )
@@ -219,6 +220,7 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                         employee.getAddress().getState(),
                         employee.getAddress().getCountry(),
                         employee.getAddress().getPostalCode(),
+                        employee.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray(),
                         employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()
                 ))
@@ -243,6 +245,7 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
                         employee -> employee.getAddress().getState(),
                         employee -> employee.getAddress().getCountry(),
                         employee -> employee.getAddress().getPostalCode(),
+                        employee -> employee.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray(),
                         employee -> employee.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()
                 )
@@ -336,14 +339,16 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
 
     @Override
     @Test
-    public void testGivenRandomId_WhenDeleteRecord_ThenThrowException() {
+    public void testGivenRandomId_WhenDeleteRecord_ThenReturnFalse() {
         // Given
         Integer id = RandomUtils.nextInt();
 
-        // When & Then
-        Assertions.assertThatThrownBy(() -> employeeRepository.deleteById(id))
-                .isInstanceOf(EmptyResultDataAccessException.class)
-                .hasMessage(String.format("No class com.spring.crud.demo.model.emp.Employee entity with id %d exists!", id));
+        // When
+        employeeRepository.deleteById(id);
+        Boolean deletedEmployee = employeeRepository.existsById(id);
+
+        // Then
+        Assertions.assertThat(deletedEmployee).isFalse();
     }
 
     @Override
@@ -382,6 +387,7 @@ class EmployeeRepositoryTest implements BaseRepositoryTest<Employee> {
         Assertions.assertThat(actualRecord.getSpouse()).isEqualTo(expectedRecord.getSpouse());
         Assertions.assertThat(actualRecord.getDateOfJoining()).isEqualTo(expectedRecord.getDateOfJoining());
         Assertions.assertThat(actualRecord.getHobbies().toArray()).isEqualTo(expectedRecord.getHobbies().toArray());
+        Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getId).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getType).toArray());
         Assertions.assertThat(actualRecord.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray()).isEqualTo(expectedRecord.getPhoneNumbers().stream().map(PhoneNumber::getNumber).toArray());
         Assertions.assertThat(actualRecord.getAddress().getStreetAddress()).isEqualTo(expectedRecord.getAddress().getStreetAddress());
