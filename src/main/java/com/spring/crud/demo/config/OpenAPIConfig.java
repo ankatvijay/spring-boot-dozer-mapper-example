@@ -11,15 +11,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(value = "openAPIConfig")
 public class OpenAPIConfig {
 
-    @Value(value = "${springdoc.version:unknown}")
-    private String springDocVersion;
-
     @Bean
-    public OpenAPI customOpenAPI() {
+    public OpenAPI customOpenAPI(@Value(value = "${spring.application.name:unknown}") final String springApplicationName, @Value(value = "${springdoc.version:unknown}") final String springDocVersion) {
         return new OpenAPI()
-                .info(new Info().title("CRUD API")
+                .info(new Info().title(springApplicationName)
                 .version(springDocVersion)
-                .contact(new Contact().name("Vijay Ankat").url("https://github.com/ankat"))
+                .contact(new Contact().name("Vijay Ankat").url("https://github.com/ankatvijay"))
                 .description("This is a sample CRUD application using spring data")
                 .termsOfService("https://swagger.io/terms/")
                 .license(new License().name("Apache 2.0").url("https://springdoc.org")));
