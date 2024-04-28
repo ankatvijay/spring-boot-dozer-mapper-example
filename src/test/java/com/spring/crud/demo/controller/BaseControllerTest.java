@@ -7,7 +7,7 @@ import java.io.IOException;
 public interface BaseControllerTest<T, R> {
 
 
-    void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException;
+    void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws Exception;
 
     void testGivenNon_WhenGetAllRecords_ThenThrowException();
 
