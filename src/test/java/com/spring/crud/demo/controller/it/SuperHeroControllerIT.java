@@ -59,9 +59,9 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
     @Override
     public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws IOException {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        superHeros.forEach(s -> restTemplate.postForEntity(url + "/super-heroes", s, SuperHeroDTO.class));
-        Tuple[] expectedSuperHeroes = superHeros.stream()
+        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
+        superHeroes.forEach(s -> restTemplate.postForEntity(url + "/super-heroes", s, SuperHeroDTO.class));
+        Tuple[] expectedSuperHeroes = superHeroes.stream()
                 .map(superHero -> AssertionsForClassTypes.tuple(
                         superHero.getName(),
                         superHero.getSuperName(),
@@ -110,8 +110,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
     @Override
     public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws IOException {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
+        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
         SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
 
         // When
@@ -150,8 +150,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
     @Override
     public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws IOException {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
+        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
         SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
         Map<String, Object> map = new ObjectMapper().convertValue(expectedSuperHero, Map.class);
 
@@ -194,8 +194,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
     @Override
     public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws IOException {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO expectedSuperHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
+        SuperHeroDTO expectedSuperHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
 
         // When
         HttpHeaders headers = new HttpHeaders();
@@ -213,8 +213,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
     @Override
     public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() throws IOException {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
+        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
         SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
 
         // When
@@ -234,8 +234,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
     @Override
     public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() throws IOException {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
+        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
         SuperHeroDTO expectedSuperHero = restTemplate.postForEntity(url + "/super-heroes", insertRecord, SuperHeroDTO.class).getBody();
 
         // When
@@ -316,8 +316,8 @@ public class SuperHeroControllerIT implements BaseControllerTest<SuperHeroDTO, S
     @Override
     public void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws IOException {
         // Given
-        List<SuperHeroDTO> superHeros = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO superHero = superHeros.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
+        SuperHeroDTO superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
         SuperHeroDTO savedSuperHero = restTemplate.postForEntity(url + "/super-heroes", superHero, SuperHeroDTO.class).getBody();
 
         // When
