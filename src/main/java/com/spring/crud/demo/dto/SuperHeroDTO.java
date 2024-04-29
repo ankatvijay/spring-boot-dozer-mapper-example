@@ -1,12 +1,13 @@
 package com.spring.crud.demo.dto;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
 
+@EqualsAndHashCode
 @Getter
 @Setter
 public class SuperHeroDTO implements Serializable {
