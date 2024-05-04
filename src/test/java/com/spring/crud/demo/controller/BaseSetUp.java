@@ -10,13 +10,13 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class BaseSetUpController<T, Class<R>> implements Consumer<T>, Function<T, Class<R>> {
+public class BaseSetUp<T, R> implements Consumer<T>, Function<T, R> {
 
     private String url;
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
-    public BaseSetUpController(String url, MockMvc mockMvc, ObjectMapper objectMapper) {
+    public BaseSetUp(String url, MockMvc mockMvc, ObjectMapper objectMapper) {
         this.url = url;
         this.mockMvc = mockMvc;
         this.objectMapper = objectMapper;
@@ -37,7 +37,7 @@ public class BaseSetUpController<T, Class<R>> implements Consumer<T>, Function<T
     }
 
     @Override
-    public Class<R> apply(T t) {
+    public R apply(T t) {
         try {
             String str = mockMvc.perform(MockMvcRequestBuilders.post(url)
                             .accept(MediaType.APPLICATION_JSON)
@@ -46,7 +46,7 @@ public class BaseSetUpController<T, Class<R>> implements Consumer<T>, Function<T
                     .andDo(MockMvcResultHandlers.log())
                     .andExpect(MockMvcResultMatchers.status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            return objectMapper.readValue(str,  Class<R>);
+            return (R) objectMapper.readValue(str,  t.getClass());
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

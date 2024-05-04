@@ -4,8 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.controller.BaseControllerTest;
 import com.spring.crud.demo.controller.BaseSetUp;
-import com.spring.crud.demo.dto.SuperHeroDTO;
-import com.spring.crud.demo.model.SuperHero;
+import com.spring.crud.demo.dto.StudentDTO;
+import com.spring.crud.demo.model.Student;
+import com.spring.crud.demo.utils.Constant;
 import com.spring.crud.demo.utils.FileLoader;
 import org.apache.commons.lang3.RandomUtils;
 import org.assertj.core.api.Assertions;
@@ -27,16 +28,16 @@ import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.io.File;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 
 //@ExtendWith(SpringExtension.class)
-//@WebMvcTest(controllers = SuperHeroController.class)
+//@WebMvcTest(controllers = StudentController.class)
 @SpringBootTest
 @AutoConfigureMockMvc
-public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperHero, SuperHeroDTO> {
+public class StudentControllerMockMVCTest implements BaseControllerTest<Student, StudentDTO> {
 
     @Autowired
     private MockMvc mockMvc;
@@ -49,13 +50,13 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     static void init() {
         objectMapper = new ObjectMapper();
         typeFactory = objectMapper.getTypeFactory();
-        file = FileLoader.getFileFromResource("superheroes.json");
+        file = FileLoader.getFileFromResource("students.json");
     }
 
     @BeforeEach
     public void setUp() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/super-heroes")
+                        .delete("/students")
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
     }
@@ -64,20 +65,19 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     @Override
     public void testGivenNon_WhenGetAllRecords_ThenReturnListRecord() throws Exception {
         // Given
-        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        superHeroes.forEach(superHeroDTO -> new BaseSetUp<SuperHeroDTO,SuperHeroDTO>("/super-heroes", mockMvc,objectMapper).accept(superHeroDTO));
-        Tuple[] expectedSuperHeroes = superHeroes.stream()
-                .map(superHero -> AssertionsForClassTypes.tuple(
-                        superHero.getName(),
-                        superHero.getSuperName(),
-                        superHero.getProfession(),
-                        superHero.getAge(),
-                        superHero.getCanFly()))
+        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        students.forEach(studentDTO -> new BaseSetUp<StudentDTO,StudentDTO>("/students", mockMvc,objectMapper).accept(studentDTO));
+        Tuple[] expectedStudents = students.stream()
+                .map(student -> AssertionsForClassTypes.tuple(student.getRollNo(),
+                        student.getFirstName(),
+                        student.getLastName(),
+                        student.getDateOfBirth(),
+                        student.getMarks()))
                 .toArray(Tuple[]::new);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .get("/super-heroes")
+                        .get("/students")
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -87,14 +87,14 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.[*]").isArray());
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(Matchers.greaterThan(0)));
         String strResult = resultActions.andReturn().getResponse().getContentAsString();
-        List<SuperHeroDTO> actualSuperHeroes = objectMapper.readValue(strResult, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        Assertions.assertThat(actualSuperHeroes)
-                .extracting(SuperHeroDTO::getName,
-                        SuperHeroDTO::getSuperName,
-                        SuperHeroDTO::getProfession,
-                        SuperHeroDTO::getAge,
-                        SuperHeroDTO::getCanFly)
-                .containsExactly(expectedSuperHeroes);
+        List<StudentDTO> actualStudents = objectMapper.readValue(strResult, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        Assertions.assertThat(actualStudents).extracting(
+                        StudentDTO::getRollNo,
+                        StudentDTO::getFirstName,
+                        StudentDTO::getLastName,
+                        StudentDTO::getDateOfBirth,
+                        StudentDTO::getMarks)
+                .containsExactly(expectedStudents);
     }
 
     @Test
@@ -102,7 +102,7 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     public void testGivenNon_WhenGetAllRecords_ThenThrowException() throws Exception {
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .get("/super-heroes")
+                        .get("/students")
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -117,25 +117,25 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     @Override
     public void testGivenId_WhenGetRecordsById_ThenReturnRecord() throws Exception {
         // Given
-        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = new BaseSetUp<SuperHeroDTO,SuperHeroDTO>("/super-heroes", mockMvc,objectMapper).apply(insertRecord);
+        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = new BaseSetUp<StudentDTO,StudentDTO>("/students", mockMvc,objectMapper).apply(insertRecord);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .get("/super-heroes/{id}", expectedSuperHero.getId())
+                        .get("/students/{id}", expectedStudent.getId())
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
         // Then
         resultActions.andExpect(MockMvcResultMatchers.status().isOk());
         resultActions.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(expectedSuperHero.getId()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.name").value(expectedSuperHero.getName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.superName").value(expectedSuperHero.getSuperName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.profession").value(expectedSuperHero.getProfession()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.age").value(expectedSuperHero.getAge()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.canFly").value(expectedSuperHero.getCanFly()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(expectedStudent.getId()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.rollNo").value(expectedStudent.getRollNo()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedStudent.getFirstName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedStudent.getLastName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfBirth").value(expectedStudent.getDateOfBirth()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.marks").value(expectedStudent.getMarks()));
     }
 
     @Test
@@ -146,7 +146,7 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .get("/super-heroes/{id}", id)
+                        .get("/students/{id}", id)
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -161,15 +161,15 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     @Override
     public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws Exception {
         // Given
-        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = new BaseSetUp<SuperHeroDTO,SuperHeroDTO>("/super-heroes", mockMvc,objectMapper).apply(insertRecord);
+        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = new BaseSetUp<StudentDTO,StudentDTO>("/students", mockMvc,objectMapper).apply(insertRecord);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .post("/super-heroes/search")
+                        .post("/students/search")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(expectedSuperHero))
+                        .content(objectMapper.writeValueAsString(expectedStudent))
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -179,21 +179,21 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.[*]").isArray());
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(Matchers.greaterThan(0)));
         String strResult = resultActions.andReturn().getResponse().getContentAsString();
-        List<SuperHeroDTO> actualSuperHeroes = objectMapper.readValue(strResult, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        assertRecord(objectMapper.readValue(objectMapper.writeValueAsString(expectedSuperHero), SuperHero.class), actualSuperHeroes.getFirst());
+        List<StudentDTO> actualStudents = objectMapper.readValue(strResult, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        assertRecord(objectMapper.readValue(objectMapper.writeValueAsString(expectedStudent), Student.class), actualStudents.getFirst());
     }
 
     @Test
     @Override
     public void testGivenRandomRecord_WhenGetAllRecordsByExample_ThenThrowException() throws Exception {
         // Given
-        SuperHero expectedSuperHero = new SuperHero("Bruce Wayne", "Batman", "Business man", 35, true);
+        Student expectedStudent = new Student(4, "Salman", "Khan", LocalDate.parse("01-01-2000", DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)), 600.0f);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .post("/super-heroes/search")
+                        .post("/students/search")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(expectedSuperHero))
+                        .content(objectMapper.writeValueAsString(expectedStudent))
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -208,40 +208,40 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     @Override
     public void testGivenRecord_WhenInsertRecord_ThenReturnInsertRecord() throws Exception {
         // Given
-        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO expectedSuperHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
+        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        StudentDTO expectedStudent = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .post("/super-heroes")
+                        .post("/students")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(expectedSuperHero))
+                        .content(objectMapper.writeValueAsString(expectedStudent))
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
         // Then
         resultActions.andExpect(MockMvcResultMatchers.status().isCreated());
         resultActions.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.name").value(expectedSuperHero.getName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.superName").value(expectedSuperHero.getSuperName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.profession").value(expectedSuperHero.getProfession()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.age").value(expectedSuperHero.getAge()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.canFly").value(expectedSuperHero.getCanFly()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.rollNo").value(expectedStudent.getRollNo()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedStudent.getFirstName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedStudent.getLastName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfBirth").value(expectedStudent.getDateOfBirth()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.marks").value(expectedStudent.getMarks()));
     }
 
     @Test
     @Override
     public void testGivenExistingRecord_WhenInsertRecord_ThenThrowException() throws Exception {
         // Given
-        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = new BaseSetUp<SuperHeroDTO,SuperHeroDTO>("/super-heroes", mockMvc,objectMapper).apply(insertRecord);
+        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = new BaseSetUp<StudentDTO,StudentDTO>("/students", mockMvc,objectMapper).apply(insertRecord);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .post("/super-heroes")
+                        .post("/students")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(expectedSuperHero))
+                        .content(objectMapper.writeValueAsString(expectedStudent))
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -256,28 +256,28 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     @Override
     public void testGivenExistingRecordAndExistingRecordId_WhenUpdateRecord_ThenReturnUpdateRecord() throws Exception {
         // Given
-        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO insertRecord = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO expectedSuperHero = new BaseSetUp<SuperHeroDTO,SuperHeroDTO>("/super-heroes", mockMvc,objectMapper).apply(insertRecord);
+        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        StudentDTO insertRecord = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO expectedStudent = new BaseSetUp<StudentDTO,StudentDTO>("/students", mockMvc,objectMapper).apply(insertRecord);
 
         // When
-        expectedSuperHero.setAge(45);
+        expectedStudent.setMarks(800.f);
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .put("/super-heroes/{id}", expectedSuperHero.getId())
+                        .put("/students/{id}", expectedStudent.getId())
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(expectedSuperHero))
+                        .content(objectMapper.writeValueAsString(expectedStudent))
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
         // Then
         resultActions.andExpect(MockMvcResultMatchers.status().isAccepted());
         resultActions.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(expectedSuperHero.getId()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.name").value(expectedSuperHero.getName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.superName").value(expectedSuperHero.getSuperName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.profession").value(expectedSuperHero.getProfession()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.age").value(expectedSuperHero.getAge()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.canFly").value(expectedSuperHero.getCanFly()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(expectedStudent.getId()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.rollNo").value(expectedStudent.getRollNo()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedStudent.getFirstName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedStudent.getLastName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfBirth").value(expectedStudent.getDateOfBirth()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.marks").value(expectedStudent.getMarks()));
     }
 
     @Test
@@ -285,14 +285,14 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     public void testGivenRandomIdAndNullRecord_WhenUpdateRecord_ThenThrowException() throws Exception {
         // Given
         int id = RandomUtils.nextInt();
-        SuperHeroDTO superHero = new SuperHeroDTO();
-        superHero.setId(1);
+        StudentDTO student = new StudentDTO();
+        student.setId(1);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .put("/super-heroes/{id}", id)
+                        .put("/students/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(superHero))
+                        .content(objectMapper.writeValueAsString(student))
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -300,26 +300,26 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
         resultActions.andExpect(MockMvcResultMatchers.status().isInternalServerError());
         resultActions.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.status", 500).exists());
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.message", "Update Record id: " + id + " not equal to payload id: " + superHero.getId()).exists());
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.message", "Update Record id: " + id + " not equal to payload id: " + student.getId()).exists());
     }
 
     @Test
     @Override
     public void testGivenId_WhenDeleteRecord_ThenReturnTrue() throws Exception {
         // Given
-        List<SuperHeroDTO> superHeroes = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, SuperHeroDTO.class));
-        SuperHeroDTO superHero = superHeroes.stream().filter(s -> s.getSuperName().equals("Spider Man")).findFirst().orElseGet(SuperHeroDTO::new);
-        SuperHeroDTO savedSuperHero = new BaseSetUp<SuperHeroDTO,SuperHeroDTO>("/super-heroes", mockMvc,objectMapper).apply(superHero);
+        List<StudentDTO> students = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, StudentDTO.class));
+        StudentDTO student = students.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(StudentDTO::new);
+        StudentDTO savedStudent = new BaseSetUp<StudentDTO,StudentDTO>("/students", mockMvc,objectMapper).apply(student);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/super-heroes/{id}", savedSuperHero.getId()))
+                        .delete("/students/{id}", savedStudent.getId()))
                 .andDo(MockMvcResultHandlers.log());
 
         // Then
         resultActions.andExpect(MockMvcResultMatchers.status().isAccepted());
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.status", HttpStatus.ACCEPTED.value()).exists());
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.message", "Record deleted with id " + savedSuperHero.getId()).exists());
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.message", "Record deleted with id " + savedStudent.getId()).exists());
     }
 
     @Test
@@ -330,7 +330,7 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/super-heroes/{id}", id))
+                        .delete("/students/{id}", id))
                 .andDo(MockMvcResultHandlers.log());
 
         // Then
@@ -344,7 +344,7 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     public void testGivenNon_WhenGetAllRecords_ThenReturnEmptyListRecord() throws Exception {
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
-                        .delete("/super-heroes"))
+                        .delete("/students"))
                 .andDo(MockMvcResultHandlers.log());
 
         // Then
@@ -352,12 +352,12 @@ public class SuperHeroControllerMockMVCTest implements BaseControllerTest<SuperH
     }
 
     @Override
-    public void assertRecord(SuperHero expectedRecord, SuperHeroDTO actualRecord) {
+    public void assertRecord(Student expectedRecord, StudentDTO actualRecord) {
         Assertions.assertThat(actualRecord).isNotNull();
-        Assertions.assertThat(actualRecord.getName()).isEqualTo(expectedRecord.getName());
-        Assertions.assertThat(actualRecord.getSuperName()).isEqualTo(expectedRecord.getSuperName());
-        Assertions.assertThat(actualRecord.getProfession()).isEqualTo(expectedRecord.getProfession());
-        Assertions.assertThat(actualRecord.getAge()).isEqualTo(expectedRecord.getAge());
-        Assertions.assertThat(actualRecord.getCanFly()).isEqualTo(expectedRecord.getCanFly());
+        Assertions.assertThat(actualRecord.getRollNo()).isEqualTo(expectedRecord.getRollNo());
+        Assertions.assertThat(actualRecord.getFirstName()).isEqualTo(expectedRecord.getFirstName());
+        Assertions.assertThat(actualRecord.getLastName()).isEqualTo(expectedRecord.getLastName());
+        Assertions.assertThat(actualRecord.getDateOfBirth()).isEqualTo(expectedRecord.getDateOfBirth().format(DateTimeFormatter.ofPattern(Constant.DATE_FORMAT)));
+        Assertions.assertThat(actualRecord.getMarks()).isEqualTo(expectedRecord.getMarks());
     }
 }
