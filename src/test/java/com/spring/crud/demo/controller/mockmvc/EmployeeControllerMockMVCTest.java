@@ -1,5 +1,6 @@
 package com.spring.crud.demo.controller.mockmvc;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.spring.crud.demo.controller.BaseControllerTest;
@@ -51,6 +52,7 @@ public class EmployeeControllerMockMVCTest implements BaseControllerTest<Employe
     @BeforeAll
     static void init() {
         objectMapper = new ObjectMapper();
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         typeFactory = objectMapper.getTypeFactory();
         file = FileLoader.getFileFromResource("employees.json");
     }
@@ -101,7 +103,7 @@ public class EmployeeControllerMockMVCTest implements BaseControllerTest<Employe
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(Matchers.greaterThan(0)));
         String strResult = resultActions.andReturn().getResponse().getContentAsString();
         List<EmployeeDTO> actualEmployees = objectMapper.readValue(strResult, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
-        Assertions.assertThat(actualEmployees.get(0))
+        Assertions.assertThat(actualEmployees)
                 .extracting(EmployeeDTO::getFirstName,
                         EmployeeDTO::getLastName,
                         EmployeeDTO::getAge,
@@ -154,11 +156,22 @@ public class EmployeeControllerMockMVCTest implements BaseControllerTest<Employe
         resultActions.andExpect(MockMvcResultMatchers.status().isOk());
         resultActions.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(expectedEmployee.getId()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.rollNo").value(expectedEmployee.getFirstName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedEmployee.getLastName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedEmployee.getAge()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfBirth").value(expectedEmployee.getNoOfChildrens()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.marks").value(expectedEmployee.getSpouse()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedEmployee.getFirstName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedEmployee.getLastName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.age").value(expectedEmployee.getAge()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.noOfChildrens").value(expectedEmployee.getNoOfChildrens()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.spouse").value(expectedEmployee.getSpouse()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfJoining").value(expectedEmployee.getDateOfJoining()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.hobbies").value(expectedEmployee.getHobbies()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.id").value(expectedEmployee.getAddress().getId()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.streetAddress").value(expectedEmployee.getAddress().getStreetAddress()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.city").value(expectedEmployee.getAddress().getCity()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.state").value(expectedEmployee.getAddress().getState()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.country").value(expectedEmployee.getAddress().getCountry()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.postalCode").value(expectedEmployee.getAddress().getPostalCode()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].id").value(expectedEmployee.getPhoneNumbers().get(0).getId()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].type").value(expectedEmployee.getPhoneNumbers().get(0).getType()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].number").value(expectedEmployee.getPhoneNumbers().get(0).getNumber()));
     }
 
     @Test
@@ -185,14 +198,17 @@ public class EmployeeControllerMockMVCTest implements BaseControllerTest<Employe
     public void testGivenExample_WhenGetAllRecordsByExample_ThenReturnListRecord() throws Exception {
         // Given
         List<EmployeeDTO> employees = objectMapper.readValue(file, typeFactory.constructCollectionType(List.class, EmployeeDTO.class));
-        EmployeeDTO insertRecord = employees.stream().filter(s -> s.getFirstName().equals("Rahul") && s.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
-        EmployeeDTO expectedEmployee = new BaseSetUp<EmployeeDTO,EmployeeDTO>("/employees", mockMvc,objectMapper).apply(insertRecord);
+        EmployeeDTO saveEmployee = employees.stream().filter(e -> e.getFirstName().equals("Rahul") && e.getLastName().equals("Ghadage")).findFirst().orElseGet(EmployeeDTO::new);
+        EmployeeDTO expectedEmployee = new BaseSetUp<EmployeeDTO,EmployeeDTO>("/employees", mockMvc,objectMapper).apply(saveEmployee);
+        EmployeeDTO searchEmployee = objectMapper.convertValue(expectedEmployee, EmployeeDTO.class);
+        searchEmployee.setAddress(null);
+        searchEmployee.setPhoneNumbers(null);
 
         // When
         ResultActions resultActions = mockMvc.perform(MockMvcRequestBuilders
                         .post("/employees/search")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(expectedEmployee))
+                        .content(objectMapper.writeValueAsString(searchEmployee))
                         .accept(MediaType.APPLICATION_JSON))
                 .andDo(MockMvcResultHandlers.log());
 
@@ -253,11 +269,20 @@ public class EmployeeControllerMockMVCTest implements BaseControllerTest<Employe
         // Then
         resultActions.andExpect(MockMvcResultMatchers.status().isCreated());
         resultActions.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.rollNo").value(expectedEmployee.getFirstName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedEmployee.getLastName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedEmployee.getAge()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfBirth").value(expectedEmployee.getNoOfChildrens()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.marks").value(expectedEmployee.getSpouse()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedEmployee.getFirstName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedEmployee.getLastName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.age").value(expectedEmployee.getAge()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.noOfChildrens").value(expectedEmployee.getNoOfChildrens()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.spouse").value(expectedEmployee.getSpouse()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfJoining").value(expectedEmployee.getDateOfJoining()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.hobbies").value(expectedEmployee.getHobbies()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.streetAddress").value(expectedEmployee.getAddress().getStreetAddress()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.city").value(expectedEmployee.getAddress().getCity()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.state").value(expectedEmployee.getAddress().getState()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.country").value(expectedEmployee.getAddress().getCountry()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.postalCode").value(expectedEmployee.getAddress().getPostalCode()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].type").value(expectedEmployee.getPhoneNumbers().get(0).getType()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].number").value(expectedEmployee.getPhoneNumbers().get(0).getNumber()));
     }
 
     @Test
@@ -304,11 +329,22 @@ public class EmployeeControllerMockMVCTest implements BaseControllerTest<Employe
         resultActions.andExpect(MockMvcResultMatchers.status().isAccepted());
         resultActions.andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON));
         resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.id").value(expectedEmployee.getId()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.rollNo").value(expectedEmployee.getFirstName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedEmployee.getLastName()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedEmployee.getAge()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfBirth").value(expectedEmployee.getNoOfChildrens()));
-        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.marks").value(expectedEmployee.getSpouse()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.firstName").value(expectedEmployee.getFirstName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.lastName").value(expectedEmployee.getLastName()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.age").value(expectedEmployee.getAge()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.noOfChildrens").value(expectedEmployee.getNoOfChildrens()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.spouse").value(expectedEmployee.getSpouse()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.dateOfJoining").value(expectedEmployee.getDateOfJoining()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.hobbies").value(expectedEmployee.getHobbies()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.id").value(expectedEmployee.getAddress().getId()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.streetAddress").value(expectedEmployee.getAddress().getStreetAddress()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.city").value(expectedEmployee.getAddress().getCity()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.state").value(expectedEmployee.getAddress().getState()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.country").value(expectedEmployee.getAddress().getCountry()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.address.postalCode").value(expectedEmployee.getAddress().getPostalCode()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].id").value(expectedEmployee.getPhoneNumbers().get(0).getId()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].type").value(expectedEmployee.getPhoneNumbers().get(0).getType()));
+        resultActions.andExpect(MockMvcResultMatchers.jsonPath("$.phoneNumbers[0].number").value(expectedEmployee.getPhoneNumbers().get(0).getNumber()));
     }
 
     @Test
