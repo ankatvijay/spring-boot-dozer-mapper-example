@@ -1,27 +1,23 @@
 package com.spring.crud.demo.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @XmlRootElement
-@Data
-@Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "SUPER_HERO")
+@Table(name = "SUPER_HERO", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class SuperHero implements Serializable {
 
     @Id
     @GeneratedValue
     @Column(name = "ID")
-    private int id;
+    private Integer id;
 
     @Column(name = "NAME")
     private String name;
@@ -33,8 +29,16 @@ public class SuperHero implements Serializable {
     private String profession;
 
     @Column(name = "AGE")
-    private int age;
+    private Integer age;
 
     @Column(name = "CAN_FLY")
-    private boolean canFly;
+    private Boolean canFly;
+
+    public SuperHero(String name, String superName, String profession, Integer age, Boolean canFly) {
+        this.name = name;
+        this.superName = superName;
+        this.profession = profession;
+        this.age = age;
+        this.canFly = canFly;
+    }
 }

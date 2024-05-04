@@ -20,7 +20,7 @@ public class LocalDateTimeDeserializer extends StdDeserializer<LocalDateTime> {
     @Override
     public LocalDateTime deserialize(JsonParser parser, DeserializationContext context) throws IOException {
         ObjectCodec oc = parser.getCodec();
-        TextNode node = (TextNode) oc.readTree(parser);
+        TextNode node = oc.readTree(parser);
         String dateString = node.textValue();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constant.DATE_TIME_FORMAT);
         return LocalDateTime.parse(dateString, formatter);

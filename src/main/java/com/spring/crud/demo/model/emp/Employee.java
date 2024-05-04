@@ -5,23 +5,20 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.spring.crud.demo.jakson.LocalDateTimeDeserializer;
 import com.spring.crud.demo.jakson.LocalDateTimeSerializer;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+import org.hibernate.annotations.LazyCollection;
+import org.hibernate.annotations.LazyCollectionOption;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @XmlRootElement
-@NoArgsConstructor
 @Getter
 @Setter
-@ToString
+@NoArgsConstructor
 @Entity
 @Table(name = "EMPLOYEE", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class Employee implements Serializable {
@@ -29,7 +26,7 @@ public class Employee implements Serializable {
     @Id
     @GeneratedValue
     @Column(name = "ID")
-    private int id;
+    private Integer id;
 
     @Column(name = "FIRST_NAME")
     private String firstName;
@@ -38,41 +35,31 @@ public class Employee implements Serializable {
     private String lastName;
 
     @Column(name = "AGE")
-    private int age;
+    private Integer age;
 
     @Column(name = "NO_OF_CHILDRENS")
-    private int noOfChildrens;
+    private Integer noOfChildrens;
 
     @Column(name = "SPOUSE")
-    private boolean spouse;
+    private Boolean spouse;
 
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @Column(name = "DATE_OF_JOINING")
     private LocalDateTime dateOfJoining;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "HOBBIES", joinColumns = @JoinColumn(name = "ID"))
     @Column(name = "HOBBY")
-    private List<String> hobbies = new ArrayList<>();
+    private List<String> hobbies;
 
     @JsonManagedReference
-    @OneToOne(cascade = {
-            CascadeType.MERGE,
-            CascadeType.PERSIST,
-            CascadeType.REMOVE
-    })
-    @JoinColumn(name = "ADDRESS_ID")
+    @OneToOne(cascade = CascadeType.ALL, mappedBy = "employee")
     private Address address;
 
     @JsonManagedReference
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "employee",
-            orphanRemoval = true,
-            cascade = {
-                    CascadeType.MERGE,
-                    CascadeType.PERSIST,
-                    CascadeType.REMOVE
-            })
+    @LazyCollection(LazyCollectionOption.FALSE)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "employee")
     private List<PhoneNumber> phoneNumbers;
 
 

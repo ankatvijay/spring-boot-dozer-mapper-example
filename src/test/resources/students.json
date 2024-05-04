@@ -1,0 +1,72 @@
+[
+  {
+    "rollNo": 1,
+    "firstName": "Binay",
+    "lastName": "Gurung",
+    "marks": 300,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 2,
+    "firstName": "Rahul",
+    "lastName": "Ghadage",
+    "marks": 950,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 3,
+    "firstName": "Sunny",
+    "lastName": "Deol",
+    "marks": 500,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 4,
+    "firstName": "Salman",
+    "lastName": "Khan",
+    "marks": 600,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 5,
+    "firstName": "Aamir",
+    "lastName": "Khan",
+    "marks": 700,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 6,
+    "firstName": "Shahrukh",
+    "lastName": "Khan",
+    "marks": 800,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 7,
+    "firstName": "Ranbir",
+    "lastName": "Kapoor",
+    "marks": 900,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 8,
+    "firstName": "Ranveer",
+    "lastName": "Singh",
+    "marks": 800,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 9,
+    "firstName": "Akshay",
+    "lastName": "Kumar",
+    "marks": 900,
+    "dateOfBirth": "01-01-2000"
+  },
+  {
+    "rollNo": 10,
+    "firstName": "Ajay",
+    "lastName": "Devgan",
+    "marks": 800,
+    "dateOfBirth": "01-01-2000"
+  }
+]

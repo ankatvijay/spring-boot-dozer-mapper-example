@@ -1,6 +1,7 @@
 package com.spring.crud.demo.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,12 +12,14 @@ import java.net.URI;
 @RestController(value = "defaultController")
 public class DefaultController {
 
+    @Value(value = "${springdoc.swagger-ui.path:swagger-ui-custom.html}")
+    private String swaggerUIPath;
 
     @Operation(summary = "Swagger documentation url", hidden = true)
     @GetMapping
-    ResponseEntity<Void> redirect() {
+    public ResponseEntity<Void> redirect() {
         return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create("swagger-ui-custom.html"))
+                .location(URI.create(swaggerUIPath))
                 .build();
     }
 

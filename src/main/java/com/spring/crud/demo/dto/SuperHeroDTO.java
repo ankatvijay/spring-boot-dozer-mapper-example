@@ -1,15 +1,19 @@
 package com.spring.crud.demo.dto;
 
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
 
-@Data
+@EqualsAndHashCode
+@Getter
+@Setter
 public class SuperHeroDTO implements Serializable {
 
     @Mapping(value = "id")
-    private int id;
+    private Integer id;
 
     @Mapping(value = "name")
     private String name;
@@ -21,8 +25,8 @@ public class SuperHeroDTO implements Serializable {
     private String profession;
 
     @Mapping(value = "age")
-    private int age;
+    private Integer age;
 
     @Mapping(value = "canFly")
-    private boolean canFly;
+    private Boolean canFly;
 }

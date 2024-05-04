@@ -12,14 +12,21 @@ import org.springframework.context.annotation.Configuration;
 public class OpenAPIConfig {
 
     @Bean
-    public OpenAPI customOpenAPI(@Value("${springdoc.version}") String appVersion) {
+    public OpenAPI customOpenAPI(@Value(value = "${spring.application.name:unknown}") final String springApplicationName, @Value(value = "${springdoc.version:unknown}") final String springDocVersion) {
         return new OpenAPI()
-                .info(new Info().title("CRUD API")
-                .version(appVersion)
-                 .contact(new Contact().name("Vijay Ankat")
-                         .url("https://github.com/ankat"))
+                .info(new Info().title(springApplicationName)
+                .version(springDocVersion)
+                .contact(new Contact().name("Vijay Ankat").url("https://github.com/ankatvijay"))
                 .description("This is a sample CRUD application using spring data")
-                .termsOfService("http://swagger.io/terms/")
-                .license(new License().name("Apache 2.0").url("http://springdoc.org")));
+                .termsOfService("https://swagger.io/terms/")
+                .license(new License().name("Apache 2.0").url("https://springdoc.org")));
     }
+
+    /*
+    @Bean
+    @ConditionalOnMissingBean
+    SwaggerWelcomeWebMvc swaggerWelcome(SwaggerUiConfigProperties swaggerUiConfig, SpringDocConfigProperties springDocConfigProperties, SwaggerUiConfigParameters swaggerUiConfigParameters, SpringWebProvider springWebProvider) {
+        return new SwaggerWelcomeWebMvc(swaggerUiConfig, springDocConfigProperties, swaggerUiConfigParameters, springWebProvider);
+    }
+    */
 }

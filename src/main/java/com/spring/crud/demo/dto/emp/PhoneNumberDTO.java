@@ -1,16 +1,18 @@
 package com.spring.crud.demo.dto.emp;
 
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
 
-@Data
+@Getter
+@Setter
 public class PhoneNumberDTO implements Serializable {
 
     @Mapping(value = "id")
-    private int id;
+    private Integer id;
 
     @Mapping(value = "type")
     private String type;

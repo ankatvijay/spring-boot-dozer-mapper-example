@@ -4,17 +4,15 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
+import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @XmlRootElement
-@NoArgsConstructor
 @Getter
 @Setter
-@ToString(exclude = {"employee"})
+@NoArgsConstructor
 @Entity
 @Table(name = "ADDRESS", uniqueConstraints = {@UniqueConstraint(columnNames = {"ID"})})
 public class Address implements Serializable {
@@ -22,7 +20,7 @@ public class Address implements Serializable {
     @Id
     @GeneratedValue
     @Column(name = "ID")
-    private int id;
+    private Integer id;
 
     @Column(name = "STREET_ADDRESS")
     private String streetAddress;
@@ -40,11 +38,7 @@ public class Address implements Serializable {
     private String postalCode;
 
     @JsonBackReference
-    @OneToOne(mappedBy = "address",
-            cascade = {
-                    CascadeType.MERGE,
-                    CascadeType.PERSIST,
-                    CascadeType.REMOVE
-            })
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "EMPLOYEE_ID", referencedColumnName = "ID", nullable = false)
     private Employee employee;
 }

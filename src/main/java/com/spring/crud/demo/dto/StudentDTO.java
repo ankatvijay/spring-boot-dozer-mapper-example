@@ -1,18 +1,21 @@
 package com.spring.crud.demo.dto;
 
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 import org.dozer.Mapping;
 
 import java.io.Serializable;
 
-@Data
+@Getter
+@Setter
 public class StudentDTO implements Serializable {
 
 	@Mapping(value = "id")
-	private int id;
+	private Integer id;
 
 	@Mapping(value = "rollNo")
-	private int rollNo;
+	private Integer rollNo;
 
 	@Mapping(value = "firstName")
 	private String firstName;
@@ -24,5 +27,5 @@ public class StudentDTO implements Serializable {
 	private String dateOfBirth;
 
 	@Mapping(value = "marks")
-	private float marks;
+	private Float marks;
 }

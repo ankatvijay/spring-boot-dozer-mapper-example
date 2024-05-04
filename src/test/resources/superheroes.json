@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Wade Wilson",
+    "superName": "Deadpool",
+    "profession": "Street fighter",
+    "age": 28,
+    "canFly": false
+  },
+  {
+    "name": "Bruce Banner",
+    "superName": "Hulk",
+    "profession": "Doctor",
+    "age": 50,
+    "canFly": false
+  },
+  {
+    "name": "Steve Rogers",
+    "superName": "Captain America",
+    "profession": "Solder",
+    "age": 120,
+    "canFly": false
+  },
+  {
+    "name": "Tony StarkIron",
+    "superName": "Iron Man",
+    "profession": "Business man",
+    "age": 45,
+    "canFly": true
+  },
+  {
+    "name": "Peter Parker",
+    "superName": "Spider Man",
+    "profession": "Student",
+    "age": 21,
+    "canFly": true
+  }
+]
