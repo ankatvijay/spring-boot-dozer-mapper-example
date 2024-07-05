@@ -33,6 +33,7 @@ public class SpringBootH2CRUDApplication {
 	@Bean
 	public ObjectMapper getObjectMapper(Jackson2ObjectMapperBuilder builder) {
 		ObjectMapper objectMapper = builder.createXmlMapper(false).build();
+                objectMapper.setBase64Variant(Base64Variants.MIME_NO_LINEFEEDS); // for byte to string conversion
 		objectMapper.configure(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES, true);
 		objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 		objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
